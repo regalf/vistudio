@@ -1,0 +1,390 @@
+import React, { useRef, useEffect } from 'react'
+import Editor from '@monaco-editor/react'
+import type { OnMount } from '@monaco-editor/react'
+import { tokenHighlightRegistry } from '../core/TokenHighlightRegistry'
+import { EditorSettings, RegisteredTheme } from '../types'
+
+interface EditorPanelProps {
+  filePath: string | null
+  fileName: string | null
+  content: string
+  language: string
+  onChange: (value: string) => void
+  showWelcome: boolean
+  settings: EditorSettings
+  themeName: string
+  extensionThemes: RegisteredTheme[]
+}
+
+const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, language, onChange, showWelcome, settings, themeName, extensionThemes }) => {
+  const editorRef = useRef<any>(null)
+  const monacoRef = useRef<any>(null)
+  const themeDefined = useRef(false)
+  const decorationsRef = useRef<string[]>([])
+  const mountedRef = useRef(true)
+  const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      timeoutsRef.current.forEach(clearTimeout)
+      timeoutsRef.current = []
+    }
+  }, [])
+
+  const DARK_THEME = {
+    base: 'vs-dark' as const,
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+      { token: 'keyword', foreground: '569CD6' },
+      { token: 'keyword.control', foreground: 'C586C0' },
+      { token: 'string', foreground: 'CE9178' },
+      { token: 'string.escape', foreground: 'D7BA7D' },
+      { token: 'number', foreground: 'B5CEA8' },
+      { token: 'regexp', foreground: 'D16969' },
+      { token: 'operator', foreground: 'D4D4D4' },
+      { token: 'namespace', foreground: '4EC9B0' },
+      { token: 'type', foreground: '4EC9B0' },
+      { token: 'function', foreground: 'DCDCAA' },
+      { token: 'function.builtin', foreground: '4EC9B0' },
+      { token: 'variable', foreground: '9CDCFE' },
+      { token: 'variable.predefined', foreground: '4EC9B0' },
+      { token: 'macro', foreground: '569CD6' },
+      { token: 'delimiter', foreground: 'D4D4D4' },
+      { token: 'delimiter.bracket', foreground: 'FFD700' },
+      { token: 'predefined', foreground: '4EC9B0' },
+      { token: 'invalid', foreground: 'F44747' }
+    ],
+    colors: {
+      'editor.background': '#1E1E1E',
+      'editor.foreground': '#D4D4D4',
+      'editorCursor.foreground': '#FFFFFF',
+      'editor.lineHighlightBackground': '#2C2C2C',
+      'editor.selectionBackground': '#264F78',
+      'editor.inactiveSelectionBackground': '#3A3D41',
+      'editorLineNumber.foreground': '#858585',
+      'editorLineNumber.activeForeground': '#C6C6C6',
+      'editorIndentGuide.background': '#404040',
+      'editorIndentGuide.activeBackground': '#707070',
+      'editorBracketHighlight.foreground1': '#FFD700',
+      'editorBracketHighlight.foreground2': '#DA70D6',
+      'editorBracketHighlight.foreground3': '#179FFF',
+      'editorBracketHighlight.foreground4': '#9CDCFE',
+      'editorBracketHighlight.foreground5': '#CE9178',
+      'editorBracketHighlight.foreground6': '#B5CEA8'
+    }
+  }
+
+  const LIGHT_THEME = {
+    base: 'vs' as const,
+    inherit: true,
+    rules: [
+      { token: 'comment', foreground: '008000', fontStyle: 'italic' },
+      { token: 'keyword', foreground: '0000FF' },
+      { token: 'keyword.control', foreground: 'AF00DB' },
+      { token: 'string', foreground: 'A31515' },
+      { token: 'string.escape', foreground: 'D7BA7D' },
+      { token: 'number', foreground: '098658' },
+      { token: 'regexp', foreground: 'D16969' },
+      { token: 'operator', foreground: '000000' },
+      { token: 'namespace', foreground: '267F99' },
+      { token: 'type', foreground: '267F99' },
+      { token: 'function', foreground: '795E26' },
+      { token: 'function.builtin', foreground: '267F99' },
+      { token: 'variable', foreground: '001080' },
+      { token: 'variable.predefined', foreground: '267F99' },
+      { token: 'macro', foreground: '0000FF' },
+      { token: 'delimiter', foreground: '000000' },
+      { token: 'delimiter.bracket', foreground: '0451A5' },
+      { token: 'predefined', foreground: '267F99' },
+      { token: 'invalid', foreground: 'FF0000' }
+    ],
+    colors: {
+      'editor.background': '#FFFFFF',
+      'editor.foreground': '#000000',
+      'editorCursor.foreground': '#000000',
+      'editor.lineHighlightBackground': '#E8E8E8',
+      'editor.selectionBackground': '#ADD6FF',
+      'editor.inactiveSelectionBackground': '#E5EBF1',
+      'editorLineNumber.foreground': '#858585',
+      'editorLineNumber.activeForeground': '#000000',
+      'editorIndentGuide.background': '#D3D3D3',
+      'editorIndentGuide.activeBackground': '#B0B0B0',
+      'editorBracketHighlight.foreground1': '#0431A5',
+      'editorBracketHighlight.foreground2': '#AF00DB',
+      'editorBracketHighlight.foreground3': '#098658',
+      'editorBracketHighlight.foreground4': '#001080',
+      'editorBracketHighlight.foreground5': '#A31515',
+      'editorBracketHighlight.foreground6': '#267F99'
+    }
+  }
+
+  const defineAllThemes = (monaco: any) => {
+    const highlightRules = tokenHighlightRegistry.get('c') || []
+    const customThemeRules = highlightRules.map((r, i) => ({
+      token: `customHighlight.${i}`,
+      foreground: r.color
+    }))
+
+    monaco.editor.defineTheme('vs-dark-enhanced', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [...DARK_THEME.rules, ...customThemeRules],
+      colors: DARK_THEME.colors
+    })
+
+    monaco.editor.defineTheme('vs-light-enhanced', {
+      base: 'vs',
+      inherit: true,
+      rules: [...LIGHT_THEME.rules, ...customThemeRules.map((r, i) => ({
+        token: `customHighlight.${i}`,
+        foreground: r.foreground
+      }))],
+      colors: LIGHT_THEME.colors
+    })
+
+    for (const extTheme of extensionThemes) {
+      const extRules = (extTheme.tokenColors || []).map(tc => {
+        const scope = Array.isArray(tc.scope) ? tc.scope[0] : tc.scope || ''
+        return { token: scope, foreground: tc.settings.foreground?.replace('#', '') || '000000', fontStyle: tc.settings.fontStyle }
+      })
+      const extColors: Record<string, string> = {}
+      if (extTheme.colors) {
+        for (const [key, val] of Object.entries(extTheme.colors)) {
+          extColors[key] = val
+        }
+      }
+      monaco.editor.defineTheme(extTheme.id, {
+        base: extTheme.type === 'light' ? 'vs' : 'vs-dark',
+        inherit: true,
+        rules: extRules,
+        colors: extColors
+      })
+    }
+
+    monaco.editor.setTheme(themeName)
+  }
+
+  useEffect(() => {
+    if (monacoRef.current) {
+      defineAllThemes(monacoRef.current)
+    }
+  }, [themeName, extensionThemes])
+
+  const applyCustomHighlighting = () => {
+    if (!editorRef.current || !monacoRef.current) return
+    
+    const model = editorRef.current.getModel()
+    if (!model) return
+    const langId = model.getLanguageId()
+    
+    const highlightRules = tokenHighlightRegistry.get(langId) || []
+    if (highlightRules.length === 0) {
+      if (decorationsRef.current.length > 0) {
+        editorRef.current.deltaDecorations(decorationsRef.current, [])
+        decorationsRef.current = []
+      }
+      return
+    }
+
+    const text = model.getValue()
+    const lines = text.split('\n')
+    const newDecorations: any[] = []
+    const MAX_DECORATIONS = 5000
+
+    for (let lineIdx = 0; lineIdx < lines.length && newDecorations.length < MAX_DECORATIONS; lineIdx++) {
+      const line = lines[lineIdx]
+      for (let ruleIdx = 0; ruleIdx < highlightRules.length && newDecorations.length < MAX_DECORATIONS; ruleIdx++) {
+        const rule = highlightRules[ruleIdx]
+        if (!rule.match) continue
+        let pattern: RegExp
+        try {
+          pattern = typeof rule.match === 'string'
+            ? new RegExp(`\\b${rule.match}\\b`, 'g')
+            : new RegExp(rule.match.source, 'g')
+        } catch {
+          continue
+        }
+
+        let match
+        let iterations = 0
+        while ((match = pattern.exec(line)) !== null && iterations < 100) {
+          iterations++
+          if (match[0].length === 0) { pattern.lastIndex++; continue }
+          newDecorations.push({
+            range: new monacoRef.current.Range(
+              lineIdx + 1,
+              match.index + 1,
+              lineIdx + 1,
+              match.index + match[0].length + 1
+            ),
+            options: {
+              inlineClassName: `custom-highlight-${ruleIdx}`,
+              inlineClassNameAffectsAfter: true
+            }
+          })
+        }
+      }
+    }
+
+    // Add CSS for custom highlights
+    const styleId = 'custom-highlight-styles'
+    let styleEl = document.getElementById(styleId) as HTMLStyleElement
+    if (!styleEl) {
+      styleEl = document.createElement('style')
+      styleEl.id = styleId
+      document.head.appendChild(styleEl)
+    }
+    
+    const cssRules = highlightRules.map((rule, i) => 
+      `.custom-highlight-${i} { color: #${rule.color} !important; }`
+    ).join('\n')
+    styleEl.textContent = cssRules
+
+    decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, newDecorations)
+  }
+
+  const handleBeforeMount = (monaco: any) => {
+    if (themeDefined.current) return
+    themeDefined.current = true
+    defineAllThemes(monaco)
+  }
+
+  const handleEditorDidMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor
+    monacoRef.current = monaco
+
+    if (!themeDefined.current) {
+      themeDefined.current = true
+      defineAllThemes(monaco)
+    }
+
+    // Apply highlighting after a short delay to ensure model is ready
+    const initTimeout = setTimeout(() => { if (mountedRef.current) applyCustomHighlighting() }, 100)
+    timeoutsRef.current.push(initTimeout)
+
+    // Listen for content changes
+    editor.onDidChangeModelContent(() => {
+      const t = setTimeout(() => { if (mountedRef.current) applyCustomHighlighting() }, 50)
+      timeoutsRef.current.push(t)
+    })
+
+    // Listen for model changes (tab switches)
+    editor.onDidChangeModel(() => {
+      const t = setTimeout(() => { if (mountedRef.current) applyCustomHighlighting() }, 50)
+      timeoutsRef.current.push(t)
+    })
+
+    // Listen for registry changes
+    const origSet = tokenHighlightRegistry.set.bind(tokenHighlightRegistry)
+    const origDelete = tokenHighlightRegistry.delete.bind(tokenHighlightRegistry)
+
+    const highlightWithTimeout = () => {
+      const t = setTimeout(() => { if (mountedRef.current) applyCustomHighlighting() }, 50)
+      timeoutsRef.current.push(t)
+    }
+
+    tokenHighlightRegistry.set = function(key: any, value: any) {
+      origSet(key, value)
+      if (mountedRef.current) defineAllThemes(monaco)
+      highlightWithTimeout()
+      return tokenHighlightRegistry
+    }
+
+    tokenHighlightRegistry.delete = function(key: any) {
+      const result = origDelete(key)
+      if (mountedRef.current) defineAllThemes(monaco)
+      highlightWithTimeout()
+      return result
+    }
+  }
+
+  if (showWelcome) {
+    return React.createElement('div', {
+      style: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-primary)',
+        color: 'var(--text-secondary)',
+        gap: '20px'
+      }
+    }, [
+      React.createElement('h1', {
+        key: 'title',
+        style: {
+          fontSize: '48px',
+          fontWeight: 300,
+          color: 'var(--text-active)',
+          margin: 0,
+          letterSpacing: '-1px'
+        }
+      }, 'ViStudio'),
+      React.createElement('p', {
+        key: 'subtitle',
+        style: { fontSize: '16px', margin: 0, color: 'var(--text-secondary)' }
+      }, 'A modern, extensible code editor'),
+      React.createElement('div', {
+        key: 'shortcuts',
+        style: { marginTop: '30px', textAlign: 'center' }
+      }, [
+        React.createElement('p', { key: 'p1', style: { margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)' } }, 'Open a file or folder to get started'),
+        React.createElement('p', { key: 'p2', style: { margin: '8px 0', fontSize: '13px', fontFamily: 'monospace', color: 'var(--accent)' } }, 'Ctrl+O - Open File'),
+        React.createElement('p', { key: 'p3', style: { margin: '8px 0', fontSize: '13px', fontFamily: 'monospace', color: 'var(--accent)' } }, 'Ctrl+Shift+O - Open Folder')
+      ])
+    ])
+  }
+
+  return React.createElement('div', {
+    style: { flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', overflow: 'hidden' }
+  }, [
+    React.createElement(Editor, {
+      key: 'editor',
+      height: '100%',
+      theme: themeName,
+      path: filePath || fileName || 'untitled',
+      defaultLanguage: language,
+      value: content,
+      onChange: (value) => onChange(value || ''),
+      beforeMount: handleBeforeMount,
+      onMount: handleEditorDidMount,
+      options: {
+        minimap: { enabled: settings['editor.minimap'] },
+        fontSize: settings['editor.fontSize'],
+        fontFamily: settings['editor.fontFamily'],
+        fontLigatures: settings['editor.fontLigatures'],
+        automaticLayout: true,
+        scrollBeyondLastLine: settings['editor.scrollBeyondLastLine'],
+        smoothScrolling: settings['editor.smoothScrolling'],
+        cursorBlinking: settings['editor.cursorBlinking'] as any,
+        cursorSmoothCaretAnimation: 'on',
+        renderWhitespace: settings['editor.renderWhitespace'] as any,
+        bracketPairColorization: { enabled: settings['editor.bracketPairColorization'] },
+        guides: { bracketPairs: settings['editor.bracketPairGuides'], indentation: settings['editor.indentationGuides'] },
+        tabSize: settings['editor.tabSize'],
+        wordWrap: settings['editor.wordWrap'] as any,
+        lineNumbers: settings['editor.lineNumbers'] as any,
+        renderLineHighlight: 'all',
+        scrollbar: {
+          verticalScrollbarSize: 10,
+          horizontalScrollbarSize: 10
+        },
+        parameterHints: { enabled: true },
+        suggest: {
+          showKeywords: true,
+          showSnippets: true,
+          showClasses: true,
+          showFunctions: true,
+          showVariables: true,
+          showModules: true
+        }
+      }
+    })
+  ])
+}
+
+export default EditorPanel

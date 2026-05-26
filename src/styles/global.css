@@ -1,0 +1,206 @@
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/Inter-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d30;
+  --bg-hover: #505050;
+  --bg-active: #094771;
+  --bg-input: #3c3c3c;
+  --bg-dropdown: #3c3c3c;
+  --bg-menu-bar: #323233;
+  --bg-tab-active: #1e1e1e;
+  --bg-tab-inactive: #2d2d30;
+  --bg-modal: #252526;
+  --bg-button: #3c3c3c;
+  --bg-button-primary: #007acc;
+  --bg-statusbar: #007acc;
+  --bg-titlebar: #323233;
+  --bg-editor-line: #2c2c2c;
+  --bg-editor-selection: #264f78;
+
+  --text-primary: #cccccc;
+  --text-secondary: #858585;
+  --text-active: #ffffff;
+  --text-accent: #007acc;
+  --text-button: #ffffff;
+  --text-button-primary: #ffffff;
+
+  --border-primary: #3c3c3c;
+  --border-secondary: #555555;
+  --border-dropdown: #555555;
+
+  --accent: #007acc;
+  --accent-hover: #094771;
+  --danger: #e81123;
+
+  --scrollbar-thumb: #424242;
+  --scrollbar-track: #1e1e1e;
+
+  --button-close-hover-bg: #e81123;
+  --button-close-hover-text: #ffffff;
+}
+
+[data-theme="vs-light-enhanced"],
+[data-theme="vs"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f3f3;
+  --bg-tertiary: #ececec;
+  --bg-hover: #e0e0e0;
+  --bg-active: #0060c0;
+  --bg-input: #ffffff;
+  --bg-dropdown: #ffffff;
+  --bg-menu-bar: #f3f3f3;
+  --bg-tab-active: #ffffff;
+  --bg-tab-inactive: #ececec;
+  --bg-modal: #f3f3f3;
+  --bg-button: #e0e0e0;
+  --bg-button-primary: #007acc;
+  --bg-statusbar: #007acc;
+  --bg-titlebar: #f3f3f3;
+  --bg-editor-line: #e8e8e8;
+  --bg-editor-selection: #add6ff;
+
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-active: #000000;
+  --text-accent: #007acc;
+  --text-button: #ffffff;
+  --text-button-primary: #ffffff;
+
+  --border-primary: #d4d4d4;
+  --border-secondary: #b0b0b0;
+  --border-dropdown: #b0b0b0;
+
+  --accent: #007acc;
+  --accent-hover: #0060c0;
+  --danger: #e81123;
+
+  --scrollbar-thumb: #c0c0c0;
+  --scrollbar-track: #f0f0f0;
+
+  --button-close-hover-bg: #e81123;
+  --button-close-hover-text: #ffffff;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+.explorer-tree::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+}
+
+.explorer-tree::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.explorer-tree::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 5px;
+}
+
+.explorer-tree::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb);
+}
+
+.sidebar-resize-handle:hover {
+  background: var(--accent);
+}
+
+.sidebar-resize-handle:active {
+  background: var(--accent);
+}

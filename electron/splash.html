@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ViStudio</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1e1e1e;
+  color: #cccccc;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+.logo {
+  font-size: 32px;
+  font-weight: 700;
+  color: #007acc;
+  letter-spacing: 1px;
+  margin-bottom: 24px;
+}
+.logo span { color: #cccccc; }
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #3c3c3c;
+  border-top-color: #007acc;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.loading-text {
+  font-size: 13px;
+  color: #858585;
+  letter-spacing: 0.5px;
+}
+.status {
+  font-size: 11px;
+  color: #555;
+  margin-top: 8px;
+}
+</style>
+</head>
+<body>
+<div class="logo">Vi<span>Studio</span></div>
+<div class="spinner"></div>
+<div class="loading-text">Loading...</div>
+<div class="status" id="status">Initializing</div>
+<script>
+const statuses = [
+  'Initializing',
+  'Loading modules',
+  'Preparing workspace',
+  'Starting services',
+  'Almost ready'
+]
+let i = 0
+setInterval(() => {
+  document.getElementById('status').textContent = statuses[i % statuses.length]
+  i++
+}, 800)
+</script>
+</body>
+</html>
