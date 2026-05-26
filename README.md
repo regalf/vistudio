@@ -16,10 +16,29 @@ Built as part of the [ViTools](https://github.com/regalf/ViTools) suite.
 
 ### Requirements
 
+#### Development (from source)
+
 - **Linux** (Arch Linux recommended)
 - **Electron 42** (system-installed: `pacman -S electron`)
 - **Node.js 18+**
 - **npm**
+
+#### Runtime (pre-built AppImage)
+
+- **Linux** with **FUSE 2** (`libfuse2` on Debian/Ubuntu, `fuse2` on Arch)
+- No Node.js, npm, or Electron required — the AppImage is self-contained
+
+Install FUSE:
+```bash
+# Arch Linux
+sudo pacman -S fuse2
+
+# Debian / Ubuntu
+sudo apt install libfuse2
+
+# Fedora
+sudo dnf install fuse
+```
 
 ### Run
 
@@ -254,7 +273,7 @@ vistudio/
 
 ## More Information
 
-For full documentation on the extension system, API reference, theming, and debugging, see the **[Wiki](https://github.com/regalf/vistudio/wiki)** or **[Documentation.md](Documentation.md)**.
+For full documentation on the extension system, API reference, theming, and debugging, see the **[Wiki](https://github.com/regalf/vistudio/wiki)**.
 
 ---
 
