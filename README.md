@@ -54,12 +54,16 @@ Launches a Vite dev server on port 5173 and opens Electron with hot-reload.
 ### Build Executable
 
 ```bash
-npm run dist         # Package into AppImage + directory
+npm run dist         # Package into AppImage + directory (Linux)
 npm run dist:dir     # Package into directory only (faster)
 npm run dist:appimage # AppImage only
+npm run dist:win     # Windows portable .exe (cross-compile from Linux)
+npm run dist:nsis    # Windows NSIS installer (requires Wine)
 ```
 
-Output goes to `release/` — a standalone Linux executable (no Node.js or npm required).
+Output goes to `release/` — standalone executables (no Node.js or npm required).
+
+> **Windows cross-compilation**: build from Linux with `dist:win`. Requires Wine and NSIS for `.exe`/installer targets (`dist:nsis`). The `dist:win` command produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run.
 
 ### Commands
 

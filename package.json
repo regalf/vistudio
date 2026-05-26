@@ -31,7 +31,9 @@
     "typecheck": "tsc --noEmit",
     "dist": "npm run build && electron-builder",
     "dist:dir": "npm run build && electron-builder --dir",
-    "dist:appimage": "npm run build && electron-builder --linux AppImage"
+    "dist:appimage": "npm run build && electron-builder --linux AppImage",
+    "dist:win": "npm run build && electron-builder --win dir",
+    "dist:nsis": "npm run build && electron-builder --win nsis"
   },
   "build": {
     "appId": "com.regalf.vistudio",
@@ -63,7 +65,12 @@
       "category": "Development"
     },
     "win": {
-      "target": "dir"
+      "target": [
+        "portable",
+        "nsis",
+        "dir"
+      ],
+      "signAndEditExecutable": false
     },
     "mac": {
       "target": "dir"
