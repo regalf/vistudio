@@ -12,6 +12,9 @@ app.commandLine.appendSwitch('disable-software-rasterizer')
 app.commandLine.appendSwitch('disable-dev-shm-usage')
 app.disableHardwareAcceleration()
 
+// Ensure consistent data dir name across platforms
+;(app as any).name = 'ViStudio'
+
 let mainWindow: BrowserWindow | null = null
 
 function createMenu() {
