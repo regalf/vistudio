@@ -671,11 +671,13 @@ ipcMain.handle('git:allBranches', async (_, dir: string) => {
 // Auto-updater configuration
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
+const updaterChannel = process.platform === 'win32' ? 'latest-windows' : undefined
 autoUpdater.setFeedURL({
   provider: 'github',
   owner: 'regalf',
   repo: 'vistudio',
-  private: false
+  private: false,
+  channel: updaterChannel
 })
 
 function setupAutoUpdater() {
