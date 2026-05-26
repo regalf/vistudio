@@ -1,5 +1,7 @@
 # ViStudio
 
+> Part of the **[ViTools](https://github.com/regalf/ViTools)** suite — a collection of Linux desktop development tools built with AI-assisted coding.
+
 > A lightweight, extensible code editor built with Electron, React, TypeScript, and Monaco Editor.
 
 ## About
