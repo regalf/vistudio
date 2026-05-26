@@ -8,7 +8,6 @@ import {
   CompletionProvider,
   Disposable,
   ProjectTemplate,
-  TokenHighlightRule,
   RegisteredTheme
 } from '../types/extension'
 import { ExtensionAPIImpl } from './ExtensionAPI'

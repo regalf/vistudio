@@ -28,7 +28,38 @@
     "preview": "vite preview",
     "electron:dev": "./run.sh",
     "start": "./run.sh",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "dist": "npm run build && electron-builder",
+    "dist:dir": "npm run build && electron-builder --dir",
+    "dist:appimage": "npm run build && electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "com.regalf.vistudio",
+    "productName": "ViStudio",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "public/**/*"
+    ],
+    "extraMetadata": {
+      "main": "dist-electron/main.js"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "dir"
+      ],
+      "category": "Development"
+    },
+    "win": {
+      "target": "dir"
+    },
+    "mac": {
+      "target": "dir"
+    }
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
@@ -48,6 +79,7 @@
     "concurrently": "^8.2.2",
     "cross-env": "^10.1.0",
     "electron": "^42.1.0",
+    "electron-builder": "^26.8.1",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
     "vite-plugin-electron": "^0.28.1",

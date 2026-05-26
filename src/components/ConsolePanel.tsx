@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 
 interface LogEntry {
-  id: number
+  id: string
   timestamp: string
   level: 'log' | 'warn' | 'error' | 'info'
   message: string

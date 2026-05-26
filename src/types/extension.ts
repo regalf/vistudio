@@ -130,19 +130,12 @@ export type ExtensionAPI = {
     writeFile: (path: string, content: string) => Promise<void>
     readDir: (path: string) => Promise<FileSystemEntry[]>
     findFiles: (pattern: string) => Promise<string[]>
+    registerProjectTemplate: (template: ProjectTemplateInput) => Disposable
+    registerTheme: (theme: RegisteredTheme) => Disposable
   }
   terminal: {
     sendText: (text: string) => void
     registerCompiler: (compiler: CompilerDefinition) => Disposable
-  }
-  workspace: {
-    getPath: () => string | null
-    readFile: (path: string) => Promise<string>
-    writeFile: (path: string, content: string) => Promise<void>
-    readDir: (path: string) => Promise<FileSystemEntry[]>
-    findFiles: (pattern: string) => Promise<string[]>
-    registerProjectTemplate: (template: ProjectTemplateInput) => Disposable
-    registerTheme: (theme: RegisteredTheme) => Disposable
   }
   languages: {
     registerLanguage: (language: LanguageDefinition) => Disposable
