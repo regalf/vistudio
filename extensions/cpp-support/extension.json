@@ -1,0 +1,44 @@
+{
+  "name": "cpp-support",
+  "version": "1.0.0",
+  "description": "Supporto completo per il linguaggio C++",
+  "author": "ViStudio Team",
+  "main": "extension.js",
+  "activationEvents": ["*"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "cpp",
+        "extensions": [".cpp", ".hpp", ".cc", ".cxx", ".hxx", ".h"],
+        "aliases": ["C++", "Cpp", "cpp"]
+      }
+    ],
+    "commands": [
+      {
+        "command": "cpp.compile",
+        "title": "C++: Compile Current File",
+        "category": "C++"
+      },
+      {
+        "command": "cpp.run",
+        "title": "C++: Compile and Run",
+        "category": "C++"
+      },
+      {
+        "command": "cpp.compileDebug",
+        "title": "C++: Compile with Debug Info",
+        "category": "C++"
+      },
+      {
+        "command": "cpp.compileOptimized",
+        "title": "C++: Compile with Optimizations (-O3)",
+        "category": "C++"
+      },
+      {
+        "command": "cpp.newFile",
+        "title": "C++: New C++ File with Template",
+        "category": "C++"
+      }
+    ]
+  }
+}

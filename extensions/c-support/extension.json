@@ -1,0 +1,49 @@
+{
+  "name": "c-support",
+  "version": "1.0.0",
+  "description": "Supporto completo per il linguaggio C",
+  "author": "ViStudio Team",
+  "main": "extension.js",
+  "activationEvents": ["*"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "c",
+        "extensions": [".c", ".h"],
+        "aliases": ["C"]
+      }
+    ],
+    "commands": [
+      {
+        "command": "c.compile",
+        "title": "C: Compile Current File",
+        "category": "C"
+      },
+      {
+        "command": "c.run",
+        "title": "C: Compile and Run",
+        "category": "C"
+      },
+      {
+        "command": "c.compileDebug",
+        "title": "C: Compile with Debug Info",
+        "category": "C"
+      },
+      {
+        "command": "c.compileOptimized",
+        "title": "C: Compile with Optimizations (-O3)",
+        "category": "C"
+      },
+      {
+        "command": "c.compileWarnings",
+        "title": "C: Compile with All Warnings",
+        "category": "C"
+      },
+      {
+        "command": "c.newFile",
+        "title": "C: New C File with Template",
+        "category": "C"
+      }
+    ]
+  }
+}

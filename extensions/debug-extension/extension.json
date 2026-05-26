@@ -1,0 +1,52 @@
+{
+  "name": "debug-extension",
+  "version": "1.0.0",
+  "description": "Test tutte le funzioni dell'Extension API",
+  "author": "ViStudio Team",
+  "main": "extension.js",
+  "activationEvents": ["*"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "debug.testAll",
+        "title": "Debug: Test All API Functions",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testCommands",
+        "title": "Debug: Test Commands API",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testWindow",
+        "title": "Debug: Test Window API",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testEditor",
+        "title": "Debug: Test Editor API",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testWorkspace",
+        "title": "Debug: Test Workspace API",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testTerminal",
+        "title": "Debug: Test Terminal API",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testLanguages",
+        "title": "Debug: Test Languages API",
+        "category": "Debug"
+      },
+      {
+        "command": "debug.testEnv",
+        "title": "Debug: Test Env API",
+        "category": "Debug"
+      }
+    ]
+  }
+}
