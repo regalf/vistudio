@@ -4,13 +4,16 @@ import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSy
 import { spawn, execSync } from 'child_process'
 import { autoUpdater } from 'electron-updater'
 
-// GPU fixes - must be set before app ready
+// GPU acceleration - Skylake GT2 via Mesa 26
 app.commandLine.appendSwitch('no-sandbox')
-app.commandLine.appendSwitch('disable-gpu')
-app.commandLine.appendSwitch('disable-gpu-compositing')
-app.commandLine.appendSwitch('disable-software-rasterizer')
 app.commandLine.appendSwitch('disable-dev-shm-usage')
-app.disableHardwareAcceleration()
+app.commandLine.appendSwitch('enable-gpu-rasterization')
+app.commandLine.appendSwitch('enable-native-gpu-memory-buffers')
+app.commandLine.appendSwitch('ignore-gpu-blocklist')
+app.commandLine.appendSwitch('ozone-platform-hint', 'auto')
+
+// Ensure consistent data dir name across platforms
+;(app as any).name = 'ViStudio'
 
 // Ensure consistent data dir name across platforms
 ;(app as any).name = 'ViStudio'
