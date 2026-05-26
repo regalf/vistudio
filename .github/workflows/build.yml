@@ -15,6 +15,10 @@ on:
         description: "Silent update — sostituisce gli asset dell'ultima release"
         type: boolean
         default: false
+      buildAll:
+        description: "Build anche l'altro branch (master ↔ gpu-acceleration-test)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -70,6 +74,21 @@ jobs:
             release/*.AppImage
             release/latest-linux.yml
           retention-days: 30
+
+      - name: Trigger build on other branch (buildAll mode)
+        if: |
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.buildAll == 'true'
+        run: |
+          THIS_BRANCH="${{ github.ref_name }}"
+          if [[ "$THIS_BRANCH" == "master" ]]; then
+            OTHER="gpu-acceleration-test"
+          else
+            OTHER="master"
+          fi
+          echo "Triggering workflow on $OTHER branch..."
+          gh workflow run "${{ github.workflow }}" --ref "$OTHER" --repo "${{ github.repository }}"
+          echo "Done — build started on $OTHER"
 
   build-windows:
     needs: lint
