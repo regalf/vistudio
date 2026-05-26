@@ -171,6 +171,16 @@ function activate(context, vscode) {
       vscode.window.showErrorMessage('Debug: Error message test')
     })
 
+    test('window.onDidChangeTheme exists', function() {
+      if (typeof vscode.window.onDidChangeTheme !== 'function') throw new Error('Not a function')
+    })
+
+    test('window.onDidChangeTheme returns Disposable', function() {
+      var d = vscode.window.onDidChangeTheme(function() {})
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose method')
+      d.dispose()
+    })
+
     showResults()
   })
 
@@ -310,6 +320,38 @@ function activate(context, vscode) {
       })
     })
 
+    test('workspace.registerProjectTemplate exists', function() {
+      if (typeof vscode.workspace.registerProjectTemplate !== 'function') throw new Error('Not a function')
+    })
+
+    test('workspace.registerProjectTemplate returns Disposable', function() {
+      var d = vscode.workspace.registerProjectTemplate({
+        id: 'debug.template',
+        name: 'Debug Template',
+        language: 'text',
+        files: { 'test.txt': 'hello' }
+      })
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose method')
+      d.dispose()
+    })
+
+    test('workspace.registerTheme exists', function() {
+      if (typeof vscode.workspace.registerTheme !== 'function') throw new Error('Not a function')
+    })
+
+    test('workspace.registerTheme returns Disposable', function() {
+      var d = vscode.workspace.registerTheme({
+        id: 'debug.theme',
+        label: 'Debug Theme',
+        type: 'dark',
+        colors: { 'editor.background': '#000000' },
+        tokenColors: [{ scope: 'comment', settings: { foreground: '#888888' } }],
+        uiColors: { 'bg-primary': '#000000' }
+      })
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose method')
+      d.dispose()
+    })
+
     setTimeout(function() { showResultsAsync('Workspace') }, 1500)
   })
 
@@ -429,6 +471,29 @@ function activate(context, vscode) {
       d.dispose()
     })
 
+    test('languages.registerBuiltinFunctions exists', function() {
+      if (typeof vscode.languages.registerBuiltinFunctions !== 'function') throw new Error('Not a function')
+    })
+
+    test('languages.registerBuiltinFunctions returns Disposable', function() {
+      var d = vscode.languages.registerBuiltinFunctions('debuglang', ['func1', 'func2'])
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose method')
+      d.dispose()
+    })
+
+    test('languages.registerTokenHighlighter exists', function() {
+      if (typeof vscode.languages.registerTokenHighlighter !== 'function') throw new Error('Not a function')
+    })
+
+    test('languages.registerTokenHighlighter returns Disposable', function() {
+      var d = vscode.languages.registerTokenHighlighter('debuglang', [
+        { match: 'foo', color: 'ff0000' },
+        { match: 'bar', color: '00ff00' }
+      ])
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose method')
+      d.dispose()
+    })
+
     showResults()
   })
 
@@ -449,6 +514,26 @@ function activate(context, vscode) {
     test('env.getAppPath returns string', function() {
       var path = vscode.env.getAppPath()
       if (typeof path !== 'string') throw new Error('Not a string: ' + typeof path)
+    })
+
+    test('env.getCSSVar exists', function() {
+      if (typeof vscode.env.getCSSVar !== 'function') throw new Error('Not a function')
+    })
+
+    test('env.getCSSVar returns string', function() {
+      var val = vscode.env.getCSSVar('--bg-primary')
+      if (typeof val !== 'string') throw new Error('Not a string: ' + typeof val)
+      if (val.length === 0) throw new Error('Empty string')
+    })
+
+    test('env.getActiveTheme exists', function() {
+      if (typeof vscode.env.getActiveTheme !== 'function') throw new Error('Not a function')
+    })
+
+    test('env.getActiveTheme returns non-empty string', function() {
+      var theme = vscode.env.getActiveTheme()
+      if (typeof theme !== 'string') throw new Error('Not a string')
+      if (theme.length === 0) throw new Error('Empty string')
     })
 
     showResults()
@@ -563,6 +648,71 @@ function activate(context, vscode) {
     })
     test('env.getAppPath exists', function() {
       if (typeof vscode.env.getAppPath !== 'function') throw new Error('Not a function')
+    })
+    test('env.getCSSVar exists', function() {
+      if (typeof vscode.env.getCSSVar !== 'function') throw new Error('Not a function')
+    })
+    test('env.getCSSVar returns value', function() {
+      var val = vscode.env.getCSSVar('--bg-primary')
+      if (typeof val !== 'string' || val.length === 0) throw new Error('Invalid value')
+    })
+    test('env.getActiveTheme exists', function() {
+      if (typeof vscode.env.getActiveTheme !== 'function') throw new Error('Not a function')
+    })
+    test('env.getActiveTheme returns string', function() {
+      if (typeof vscode.env.getActiveTheme() !== 'string') throw new Error('Not a string')
+    })
+
+    // --- window (advanced) ---
+    test('window.onDidChangeTheme exists', function() {
+      if (typeof vscode.window.onDidChangeTheme !== 'function') throw new Error('Not a function')
+    })
+    test('window.onDidChangeTheme returns Disposable', function() {
+      var d = vscode.window.onDidChangeTheme(function() {})
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose')
+      d.dispose()
+    })
+
+    // --- workspace (advanced) ---
+    test('workspace.registerProjectTemplate exists', function() {
+      if (typeof vscode.workspace.registerProjectTemplate !== 'function') throw new Error('Not a function')
+    })
+    test('workspace.registerProjectTemplate returns Disposable', function() {
+      var d = vscode.workspace.registerProjectTemplate({
+        id: 'debug.allTemplate', name: 'All', language: 'text', files: { 'a.txt': '' }
+      })
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose')
+      d.dispose()
+    })
+    test('workspace.registerTheme exists', function() {
+      if (typeof vscode.workspace.registerTheme !== 'function') throw new Error('Not a function')
+    })
+    test('workspace.registerTheme returns Disposable', function() {
+      var d = vscode.workspace.registerTheme({
+        id: 'debug.allTheme', label: 'All', type: 'dark',
+        colors: { 'editor.background': '#000' },
+        uiColors: { 'bg-primary': '#000' }
+      })
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose')
+      d.dispose()
+    })
+
+    // --- languages (advanced) ---
+    test('languages.registerBuiltinFunctions exists', function() {
+      if (typeof vscode.languages.registerBuiltinFunctions !== 'function') throw new Error('Not a function')
+    })
+    test('languages.registerBuiltinFunctions returns Disposable', function() {
+      var d = vscode.languages.registerBuiltinFunctions('debugall', ['fn1'])
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose')
+      d.dispose()
+    })
+    test('languages.registerTokenHighlighter exists', function() {
+      if (typeof vscode.languages.registerTokenHighlighter !== 'function') throw new Error('Not a function')
+    })
+    test('languages.registerTokenHighlighter returns Disposable', function() {
+      var d = vscode.languages.registerTokenHighlighter('debugall', [{ match: 'x', color: 'fff' }])
+      if (!d || typeof d.dispose !== 'function') throw new Error('No dispose')
+      d.dispose()
     })
 
     // --- context ---

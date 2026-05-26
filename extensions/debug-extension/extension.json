@@ -1,7 +1,7 @@
 {
   "name": "debug-extension",
-  "version": "1.0.0",
-  "description": "Test tutte le funzioni dell'Extension API",
+  "version": "2.0.0",
+  "description": "Test tutte le funzioni dell'Extension API (incluse new APIs: Themes, CSS, Project Templates)",
   "author": "ViStudio Team",
   "main": "extension.js",
   "activationEvents": ["*"],
