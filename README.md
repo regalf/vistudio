@@ -1,43 +1,23 @@
-# ViStudio IDE
+# ViStudio
 
 > A lightweight, extensible code editor built with Electron, React, TypeScript, and Monaco Editor.
 
-![Version](https://img.shields.io/badge/version-0.9.0-blue)
-![Electron](https://img.shields.io/badge/Electron-42-%23478cbf)
-![React](https://img.shields.io/badge/React-18-%2361dafb)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-%233178c6)
-![License](https://img.shields.io/badge/license-GPLv3-blue)
+## About
+
+ViStudio is an IDE powered by **Monaco Editor** — the same engine behind VS Code — with an integrated terminal, file explorer, multi-tab editing, global search, and a sandboxed JavaScript extension system.
+
+Built as part of the [ViTools](https://github.com/regalf/ViTools) suite.
 
 ---
 
-## ✨ Features
+## Quick Start
 
-- **Monaco Editor** — The same powerful editor engine that powers VS Code, with full syntax highlighting, bracket pair colorization, and IntelliSense
-- **Multi-Tab Editing** — Open, close, reorder, and manage multiple files simultaneously
-- **Integrated Terminal** — Full xterm.js terminal with bash shell integration
-- **File Explorer** — Tree-based file browser with drag & drop support
-- **Command Palette** — Fuzzy-search command runner (`Ctrl+Shift+P`) and quick file open (`Ctrl+P`)
-- **Global Search** — Search and replace across all files with regex support
-- **Extension System** — Extend functionality with plain JavaScript extensions (sandboxed for security)
-- **Custom Themes** — Dark and light themes with full UI coverage via CSS custom properties
-- **Extension API** — Rich API for extensions: commands, editors, workspace, languages, terminal, themes
-- **Project Templates** — Create new projects from templates registered by extensions
-- **Settings Panel** — Visual settings editor with Apply/Cancel workflow
-- **Git Integration** — Built-in source control panel (status, diff, commit)
-- **Console Panel** — Developer console with log filtering
-- **File Icons** — 133+ SVG file icons for visual file type identification
-- **Keyboard Shortcuts** — Comprehensive keyboard-first workflow
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
+### Requirements
 
 - **Linux** (Arch Linux recommended)
-- **Electron 42** (system-installed)
+- **Electron 42** (system-installed: `pacman -S electron`)
 - **Node.js 18+**
-- **npm** or **pnpm**
+- **npm**
 
 ### Run
 
@@ -48,9 +28,36 @@ npm install
 ./run.sh
 ```
 
-The script starts a Vite dev server on port 5173 and launches Electron with hot-reload support.
+Launches a Vite dev server on port 5173 and opens Electron with hot-reload.
 
-### Keyboard Shortcuts
+### Commands
+
+```bash
+npm run start        # Launch ViStudio (development)
+npm run build        # TypeScript check + Vite build
+npm run typecheck    # TypeScript type checking only
+```
+
+---
+
+## Features
+
+- **Monaco Editor** — Full syntax highlighting, bracket pair colorization, minimap, IntelliSense
+- **Multi-tab editing** — Open, close, reorder, and manage multiple files
+- **Integrated terminal** — xterm.js with bash shell
+- **File explorer** — Tree browser with drag & drop
+- **Command palette** — `Ctrl+Shift+P` fuzzy-search for commands, `Ctrl+P` for files
+- **Global search** — Search and replace across all files with regex
+- **Extension system** — Sandboxed JavaScript extensions with a rich API
+- **Custom themes** — Dark and light themes with full CSS variable coverage
+- **Project templates** — Create projects from extension-registered templates
+- **Settings panel** — Visual editor with Apply/Cancel workflow
+- **Git integration** — Source control panel (status, diff, commit)
+- **File icons** — 133+ SVG icons for file type identification
+
+---
+
+## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
@@ -61,7 +68,6 @@ The script starts a Vite dev server on port 5173 and launches Electron with hot-
 | `Ctrl+Shift+S` | Save as |
 | `Ctrl+B` | Toggle sidebar |
 | `` Ctrl+` `` | Toggle terminal |
-| `Ctrl+Shift+U` | Toggle console |
 | `Ctrl+Shift+F` | Search in files |
 | `Ctrl+Shift+P` | Command palette |
 | `Ctrl+P` | Quick open file |
@@ -70,11 +76,11 @@ The script starts a Vite dev server on port 5173 and launches Electron with hot-
 
 ---
 
-## 📦 Extension System
+## Extension System
 
-ViStudio extensions are **plain JavaScript files** — no build tools, no npm, no TypeScript compilation required.
+Extensions are **plain JavaScript files** — no build tools, no npm, no TypeScript compilation required. They run in a sandboxed environment with no access to `require()`, `process`, `window`, or `fetch`.
 
-### Hello World Extension
+### Hello World
 
 ```bash
 mkdir -p ~/.config/vistudio/extensions/hello-world
@@ -104,7 +110,7 @@ activate(context, vs)
 
 Restart ViStudio or use **Extensions → Refresh Extensions**.
 
-### Extension API Overview
+### API Reference
 
 | API | Purpose |
 |-----|---------|
@@ -120,15 +126,15 @@ Restart ViStudio or use **Extensions → Refresh Extensions**.
 
 ---
 
-## 🎨 Theming
+## Theming
 
-ViStudio supports **dark and light themes** with full UI coverage via CSS custom properties. Extensions can register custom themes with both Monaco Editor colors and UI colors.
+ViStudio supports **dark and light themes** with full UI coverage via CSS custom properties. Extensions can register themes that customize both Monaco Editor token colors and UI variables.
 
 ```
 Settings → Workbench → Color Theme
 ```
 
-### Extension Theme Example
+### Custom Theme Example
 
 ```javascript
 vs.workspace.registerTheme({
@@ -152,7 +158,7 @@ vs.workspace.registerTheme({
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌──────────────────────────────────────┐
@@ -183,7 +189,7 @@ vs.workspace.registerTheme({
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 vistudio/
@@ -192,7 +198,7 @@ vistudio/
 │   └── preload.ts       # Secure IPC bridge
 ├── src/
 │   ├── App.tsx          # Main React component + state
-│   ├── components/      # UI components (16 total)
+│   ├── components/      # UI components (16)
 │   ├── core/            # Extension system, theme manager
 │   ├── styles/          # Global CSS with theme variables
 │   └── types/           # TypeScript interfaces
@@ -207,29 +213,17 @@ vistudio/
 
 ---
 
-## 🛠️ Development
+## Debugging
 
-### Commands
-
-```bash
-npm run start        # Launch ViStudio (development)
-npm run build        # TypeScript check + Vite build
-npm run typecheck    # TypeScript type checking only
-```
-
-### Debugging
-
-- **DevTools**: open automatically in dev mode
-- **Logs**: `/tmp/vistudio.log` (main process)
-- **Extension logs**: `~/.config/vistudio/extension-debug.log`
-- **Runtime errors**: `~/.config/vistudio/runtime-error.log`
+| Source | Location |
+|--------|----------|
+| DevTools | Open automatically in dev mode |
+| Main process logs | `/tmp/vistudio.log` |
+| Extension logs | `~/.config/vistudio/extension-debug.log` |
+| Runtime errors | `~/.config/vistudio/runtime-error.log` |
 
 ---
 
-## 📝 License
+## License
 
 [GNU General Public License v3.0](LICENSE)
-
----
-
-Built with ❤️ using Electron, React, and TypeScript.
