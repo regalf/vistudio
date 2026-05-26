@@ -153,6 +153,7 @@ export interface ElectronAPI {
     onNotAvailable: (callback: () => void) => void
     onDownloadProgress: (callback: (progress: any) => void) => void
     onDownloaded: (callback: () => void) => void
+    onError: (callback: (msg: string) => void) => void
   }
 }
 

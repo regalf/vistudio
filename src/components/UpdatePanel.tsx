@@ -75,6 +75,15 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
         setStatus('downloaded')
       })
     }
+
+    const onError = window.electronAPI?.update.onError
+    if (onError) {
+      onError((msg: string) => {
+        if (!mountedRef.current) return
+        setStatus('error')
+        setErrorMsg(msg)
+      })
+    }
   }, [])
 
   const handleCheck = useCallback(async () => {
