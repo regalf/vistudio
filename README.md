@@ -32,12 +32,22 @@ npm install
 
 Launches a Vite dev server on port 5173 and opens Electron with hot-reload.
 
+### Build Executable
+
+```bash
+npm run dist         # Package into AppImage + directory
+npm run dist:dir     # Package into directory only (faster)
+npm run dist:appimage # AppImage only
+```
+
+Output goes to `release/` — a standalone Linux executable (no Node.js or npm required).
+
 ### Commands
 
 ```bash
-npm run start        # Launch ViStudio (development)
 npm run build        # TypeScript check + Vite build
 npm run typecheck    # TypeScript type checking only
+npm run start        # Launch ViStudio (development)
 ```
 
 ---
@@ -210,7 +220,8 @@ vistudio/
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
-└── run.sh
+├── run.sh
+└── release/          # Packaged executable (gitignored)
 ```
 
 ---

@@ -212,24 +212,24 @@ const MenuBar: React.FC<MenuBarProps> = ({ onAction }) => {
       React.createElement('div', {
         key: 'minimize',
         onClick: () => window.electronAPI?.windowControls.minimize(),
-        onMouseEnter: (e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-hover)' },
-        onMouseLeave: (e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' },
+        onMouseEnter: (e: React.MouseEvent<HTMLDivElement>) => { e.currentTarget.style.background = 'var(--bg-hover)' },
+        onMouseLeave: (e: React.MouseEvent<HTMLDivElement>) => { e.currentTarget.style.background = 'transparent' },
         style: { width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', cursor: 'pointer', borderRadius: '3px', padding: '2px', color: 'var(--text-primary)' },
         title: 'Minimize'
       }, '\u2014'),
       React.createElement('div', {
         key: 'maximize',
         onClick: () => window.electronAPI?.windowControls.maximize(),
-        onMouseEnter: (e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-hover)' },
-        onMouseLeave: (e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' },
+        onMouseEnter: (e: React.MouseEvent<HTMLDivElement>) => { e.currentTarget.style.background = 'var(--bg-hover)' },
+        onMouseLeave: (e: React.MouseEvent<HTMLDivElement>) => { e.currentTarget.style.background = 'transparent' },
         style: { width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', cursor: 'pointer', borderRadius: '3px', padding: '2px', color: 'var(--text-primary)' },
         title: 'Maximize'
       }, '\u25a1'),
       React.createElement('div', {
         key: 'close',
         onClick: () => window.electronAPI?.windowControls.close(),
-        onMouseEnter: (e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--danger)'; (e.currentTarget as HTMLDivElement).style.color = 'var(--text-button)' },
-        onMouseLeave: (e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; (e.currentTarget as HTMLDivElement).style.color = 'var(--text-primary)' },
+        onMouseEnter: (e: React.MouseEvent<HTMLDivElement>) => { e.currentTarget.style.background = 'var(--danger)'; e.currentTarget.style.color = 'var(--text-button)' },
+        onMouseLeave: (e: React.MouseEvent<HTMLDivElement>) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-primary)' },
         style: { width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', cursor: 'pointer', borderRadius: '3px', padding: '2px', color: 'var(--text-secondary)' },
         title: 'Close'
       }, '\u2715')

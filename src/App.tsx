@@ -186,14 +186,14 @@ const App: React.FC = () => {
       document.body.style.cursor = ''
     }
 
-    handle.addEventListener('mousedown', onMouseDown)
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+    handle.addEventListener('mousedown', onMouseDown as EventListener)
+    document.addEventListener('mousemove', onMouseMove as EventListener)
+    document.addEventListener('mouseup', onMouseUp as EventListener)
 
     return () => {
-      handle.removeEventListener('mousedown', onMouseDown)
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
+      handle.removeEventListener('mousedown', onMouseDown as EventListener)
+      document.removeEventListener('mousemove', onMouseMove as EventListener)
+      document.removeEventListener('mouseup', onMouseUp as EventListener)
     }
   }, [])
 
@@ -382,7 +382,7 @@ const App: React.FC = () => {
 
     if (extensionHostRef.current) {
       const extCommands = extensionHostRef.current.getCommands()
-      extCommands.forEach((cmd, id) => {
+      extCommands.forEach((_cmd, id) => {
         if (!commands.find(c => c.id === id)) {
           commands.push({ id, label: id, category: 'Extension', type: 'command' })
         }
@@ -640,14 +640,6 @@ const App: React.FC = () => {
     setRefreshPath(folderPath)
   }, [folderPath])
 
-  const handleToggleTerminal = useCallback(() => {
-    setTerminalVisible(prev => !prev)
-  }, [])
-
-  const handleToggleConsole = useCallback(() => {
-    setConsoleVisible(prev => !prev)
-  }, [])
-
   const handleClearConsole = useCallback(() => {
     setConsoleLogs([])
   }, [])
@@ -743,7 +735,7 @@ const App: React.FC = () => {
     }
   }, [openFileInTab])
 
-  const handleFileClick = useCallback(async (path: string, line?: number) => {
+  const handleFileClick = useCallback(async (path: string, _line?: number) => {
     try {
       if (window.electronAPI) {
         const result = await window.electronAPI.fs.readFile(path)
@@ -1021,8 +1013,6 @@ const App: React.FC = () => {
       }
     }
   }, [])
-
-  const displayName = activeTab?.name || (tabs.length === 0 ? 'ViStudio' : 'Untitled')
 
   return React.createElement('div', {
     'data-theme': settings['workbench.colorTheme'],
