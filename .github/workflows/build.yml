@@ -18,7 +18,7 @@ on:
       buildAll:
         description: "Build anche l'altro branch (master ↔ gpu-acceleration-test)"
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
