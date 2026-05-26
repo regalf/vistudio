@@ -89,8 +89,8 @@ jobs:
           echo "Silent input: '${{ github.event.inputs.silent }}'"
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.silent }}" == "true" ]]; then
             echo "Silent mode: finding latest release..."
-            TAG=$(gh api /repos/${GITHUB_REPOSITORY}/releases/latest --jq .tag_name 2>/dev/null || echo "")
-            echo "API result: '$TAG'"
+            TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null) || TAG=""
+            echo "Latest tag: '$TAG'"
             if [[ -z "$TAG" ]]; then
               echo "No release found. Skipping upload."
               echo "skip=true" >> "$GITHUB_OUTPUT"
