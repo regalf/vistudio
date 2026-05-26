@@ -63,7 +63,7 @@ npm run dist:nsis    # Windows NSIS installer (requires Wine)
 
 Output goes to `release/` — standalone executables (no Node.js or npm required).
 
-> **Windows cross-compilation**: build from Linux with `dist:win`. Requires Wine and NSIS for `.exe`/installer targets (`dist:nsis`). The `dist:win` command produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run.
+> **Windows cross-compilation** (beta): build from Linux with `dist:win`. The `dist:win` command produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run. Requires Wine for NSIS installer (`dist:nsis`).
 
 ### Commands
 
@@ -89,6 +89,7 @@ npm run start        # Launch ViStudio (development)
 - **Settings panel** — Visual editor with Apply/Cancel workflow
 - **Git integration** — Source control panel (status, diff, commit)
 - **File icons** — 133+ SVG icons for file type identification
+- **Windows support** (beta) — Cross-compiled from Linux, runs on Windows 10/11 with PowerShell terminal and auto-updater
 
 ---
 
