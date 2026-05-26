@@ -47,6 +47,8 @@
     "extraMetadata": {
       "main": "dist-electron/main.js"
     },
+    "nodeGypRebuild": false,
+    "npmRebuild": false,
     "publish": {
       "provider": "github",
       "owner": "regalf",
@@ -73,7 +75,6 @@
     "@xterm/addon-web-links": "^0.12.0",
     "electron-updater": "^6.8.3",
     "monaco-editor": "^0.45.0",
-    "node-pty": "^1.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "xterm": "^5.3.0",
