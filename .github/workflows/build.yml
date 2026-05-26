@@ -114,6 +114,7 @@ jobs:
     needs: build-linux
     if: |
       startsWith(github.ref, 'refs/tags/v') ||
+      github.ref_name == 'gpu-acceleration-test' ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -127,7 +128,15 @@ jobs:
           echo "Event: ${{ github.event_name }}"
           echo "Ref: ${GITHUB_REF_NAME}"
           echo "Silent input: '${{ github.event.inputs.silent }}'"
+          SILENT=false
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.silent }}" == "true" ]]; then
+            SILENT=true
+          fi
+          if [[ "${{ github.ref_name }}" == "gpu-acceleration-test" && "${{ github.event_name }}" == "push" ]]; then
+            SILENT=true
+            echo "GPU branch push — silent replacing latest release"
+          fi
+          if [[ "$SILENT" == "true" ]]; then
             echo "Silent mode: finding latest release..."
             TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null) || TAG=""
             echo "Latest tag: '$TAG'"
