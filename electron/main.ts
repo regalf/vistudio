@@ -510,7 +510,8 @@ const DEFAULT_SETTINGS: Record<string, any> = {
   'editor.bracketPairColorization': true,
   'editor.bracketPairGuides': true,
   'editor.indentationGuides': true,
-  'editor.scrollBeyondLastLine': true
+  'editor.scrollBeyondLastLine': true,
+  'update.checkOnStartup': true
 }
 
 ipcMain.handle('settings:load', async () => {
@@ -707,6 +708,15 @@ ipcMain.handle('update:download', async () => {
   }
 })
 
+ipcMain.handle('update:cancel', async () => {
+  try {
+    ;(autoUpdater as any).cancel()
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
 ipcMain.handle('update:install', async () => {
   try {
     setImmediate(() => autoUpdater.quitAndInstall())
@@ -721,8 +731,15 @@ app.whenReady().then(() => {
   createWindow()
   setupAutoUpdater()
 
-  // Check for updates after a short delay
+  // Check for updates after a short delay (honours setting)
   setTimeout(() => {
+    try {
+      if (existsSync(SETTINGS_PATH)) {
+        const content = readFileSync(SETTINGS_PATH, 'utf-8')
+        const saved = JSON.parse(content)
+        if (saved['update.checkOnStartup'] === false) return
+      }
+    } catch (_) {}
     autoUpdater.checkForUpdates().catch(() => {})
   }, 5000)
 

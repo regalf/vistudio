@@ -10,6 +10,7 @@ import ConsolePanel from './components/ConsolePanel'
 import CommandPalette from './components/CommandPalette'
 import SearchPanel from './components/SearchPanel'
 import SettingsPanel from './components/SettingsPanel'
+import UpdatePanel from './components/UpdatePanel'
 import './styles/global.css'
 import { EditorTab, EditorSettings, CommandItem } from './types'
 import { ExtensionHost } from './core/ExtensionHost'
@@ -41,6 +42,7 @@ const BUILTIN_COMMANDS: CommandItem[] = [
   { id: 'menu:git-clone', label: 'Git Clone...', category: 'Git', type: 'command' },
   { id: 'menu:debug-test-all', label: 'Run Debug Tests', category: 'Help', shortcut: 'Ctrl+Shift+T', type: 'command' },
   { id: 'menu:settings', label: 'Settings', category: 'File', shortcut: 'Ctrl+,', type: 'command' },
+  { id: 'menu:check-updates', label: 'Check for Updates...', category: 'Help', type: 'command' },
   { id: 'menu:about', label: 'About ViStudio', category: 'Help', type: 'command' },
 ]
 
@@ -123,6 +125,8 @@ const App: React.FC = () => {
     { id: 'vs', label: 'Light (VS)', type: 'light' }
   ])
   const [extensionThemes, setExtensionThemes] = useState<RegisteredTheme[]>([])
+  const [updatePanelVisible, setUpdatePanelVisible] = useState(false)
+  const [updateNotification, setUpdateNotification] = useState<{ version: string } | null>(null)
   const extensionHostRef = useRef<ExtensionHost | null>(null)
 
   const syncExtensionThemes = useCallback(() => {
@@ -475,6 +479,17 @@ const App: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    const onAvailable = window.electronAPI?.update.onAvailable
+    if (onAvailable) {
+      onAvailable((info: { version: string }) => {
+        if (settings['update.checkOnStartup'] !== false) {
+          setUpdateNotification({ version: info.version })
+        }
+      })
+    }
+  }, [settings])
 
   const activeTab = tabs.find(t => t.id === activeTabId) || null
 
@@ -844,6 +859,10 @@ const App: React.FC = () => {
           else alert('Debug extension not loaded')
         }
         break
+      case 'menu:check-updates':
+        setUpdatePanelVisible(prev => !prev)
+        setUpdateNotification(null)
+        break
       case 'menu:about':
         alert('ViStudio IDE v0.5.0\nExtensions API loaded!')
         break
@@ -934,6 +953,13 @@ const App: React.FC = () => {
     setSettings(newSettings)
     if (window.electronAPI && window.electronAPI.settings) {
       window.electronAPI.settings.save(newSettings).catch(() => {})
+    }
+  }, [])
+
+  const handleSettingChange = useCallback((key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+    if (window.electronAPI && window.electronAPI.settings) {
+      window.electronAPI.settings.save({ [key]: value }).catch(() => {})
     }
   }, [])
 
@@ -1135,6 +1161,12 @@ const App: React.FC = () => {
         onApply: handleSettingsApply,
         onClose: () => setSettingsPanelVisible(false),
         availableThemes
+      }),
+      updatePanelVisible && React.createElement(UpdatePanel, {
+        key: 'update-panel',
+        settings,
+        onSettingChange: handleSettingChange,
+        onClose: () => setUpdatePanelVisible(false)
       })
     ]),
     showFileInput && React.createElement('div', {
@@ -1536,6 +1568,63 @@ const App: React.FC = () => {
       onFileClick: handleFileClick,
       onClose: () => setSearchPanelVisible(false)
     }),
+    updateNotification && React.createElement('div', {
+      key: 'update-notification',
+      style: {
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        background: 'var(--bg-secondary)',
+        border: '1px solid var(--accent)',
+        borderRadius: '8px',
+        padding: '14px 18px',
+        zIndex: 1002,
+        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        maxWidth: '320px'
+      }
+    }, [
+      React.createElement('div', {
+        key: 'msg',
+        style: { color: 'var(--text-primary)', fontSize: '13px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }
+      }, [
+        React.createElement('span', { key: 'dot', style: { width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' } }),
+        'Update available: v' + updateNotification.version
+      ]),
+      React.createElement('div', {
+        key: 'buttons',
+        style: { display: 'flex', gap: '6px', justifyContent: 'flex-end' }
+      }, [
+        React.createElement('button', {
+          key: 'dismiss',
+          onClick: () => setUpdateNotification(null),
+          style: {
+            padding: '5px 12px',
+            background: 'var(--bg-input)',
+            border: 'none',
+            color: 'var(--text-primary)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '12px'
+          }
+        }, 'Dismiss'),
+        React.createElement('button', {
+          key: 'view',
+          onClick: () => {
+            setUpdateNotification(null)
+            setUpdatePanelVisible(true)
+          },
+          style: {
+            padding: '5px 12px',
+            background: 'var(--accent)',
+            border: 'none',
+            color: 'var(--text-button)',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '12px'
+          }
+        }, 'View Update')
+      ])
+    ]),
     React.createElement(StatusBar, {
       key: 'statusbar',
       filePath: activeTab?.path || null,

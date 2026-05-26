@@ -86,6 +86,8 @@ const menuTemplate: { label: string; items: MenuItem[] }[] = [
   {
     label: 'Help',
     items: [
+      { label: 'Check for Updates...', action: 'menu:check-updates' },
+      { separator: true },
       { label: 'Run Debug Tests', action: 'menu:debug-test-all', shortcut: 'Ctrl+Shift+T' },
       { label: 'About ViStudio', action: 'menu:about' }
     ]

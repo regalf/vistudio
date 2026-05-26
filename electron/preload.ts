@@ -88,6 +88,7 @@ try {
   update: {
     check: () => ipcRenderer.invoke('update:check'),
     download: () => ipcRenderer.invoke('update:download'),
+    cancel: () => ipcRenderer.invoke('update:cancel'),
     install: () => ipcRenderer.invoke('update:install'),
     onAvailable: (callback: (info: any) => void) => {
       ipcRenderer.on('update:available', (_, info) => callback(info))
