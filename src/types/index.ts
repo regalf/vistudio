@@ -73,6 +73,7 @@ export interface EditorSettings {
   'files.autoSave': string
   'files.autoSaveDelay': number
   'workbench.colorTheme': string
+  'update.checkOnStartup'?: boolean
 }
 
 export type SettingsKey = keyof EditorSettings
@@ -146,6 +147,7 @@ export interface ElectronAPI {
   update: {
     check: () => Promise<{ success: boolean; error?: string }>
     download: () => Promise<{ success: boolean; error?: string }>
+    cancel: () => Promise<{ success: boolean; error?: string }>
     install: () => Promise<{ success: boolean; error?: string }>
     onAvailable: (callback: (info: any) => void) => void
     onNotAvailable: (callback: () => void) => void
