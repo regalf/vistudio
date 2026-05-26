@@ -79,6 +79,7 @@ export interface EditorSettings {
 export type SettingsKey = keyof EditorSettings
 
 export interface ElectronAPI {
+  getDataPath: () => Promise<string>
   fs: {
     readFile: (path: string) => Promise<{ success: boolean; content?: string; error?: string }>
     writeFile: (path: string, content: string) => Promise<{ success: boolean; error?: string }>

@@ -58,10 +58,12 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
     console.error('[ErrorBoundary] Caught:', error, info)
     try {
       if (window.electronAPI) {
-        window.electronAPI.fs.writeFile(
-          '/home/regaldragoon200/.config/vistudio/runtime-error.log',
-          `[${new Date().toISOString()}] [ErrorBoundary] ${error.stack || error.message}\n`
-        ).catch(() => {})
+        window.electronAPI.getDataPath().then(dataPath => {
+          window.electronAPI.fs.writeFile(
+            dataPath + '/runtime-error.log',
+            `[${new Date().toISOString()}] [ErrorBoundary] ${error.stack || error.message}\n`
+          ).catch(() => {})
+        }).catch(() => {})
       }
     } catch {}
   }

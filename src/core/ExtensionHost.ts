@@ -32,6 +32,7 @@ export class ExtensionHost {
   private terminalAPI: any
   private envAPI: any
   private themeService: ThemeService
+  private logFilePath: string
 
   constructor(
     getActiveTabContent: () => { path: string | null; content: string; language: string } | null,
@@ -41,7 +42,8 @@ export class ExtensionHost {
     fsAPI: any,
     terminalAPI: any,
     envAPI: any,
-    themeService: ThemeService
+    themeService: ThemeService,
+    logFilePath: string = 'extension-debug.log'
   ) {
     this.extensions = new Map()
     this.commands = new Map()
@@ -59,6 +61,7 @@ export class ExtensionHost {
     this.terminalAPI = terminalAPI
     this.envAPI = envAPI
     this.themeService = themeService
+    this.logFilePath = logFilePath
   }
 
   async loadExtension(extensionPath: string): Promise<ExtensionInfo | null> {
@@ -98,7 +101,7 @@ export class ExtensionHost {
   }
 
   async activateExtension(extensionId: string): Promise<boolean> {
-    const logFile = '/home/regaldragoon200/.config/vistudio/extension-debug.log'
+    const logFile = this.logFilePath
     const log = async (msg: string) => {
       const line = `[${new Date().toISOString()}] [ACTIVATE] ${msg}\n`
       console.log(`[ExtensionHost] ${msg}`)
@@ -221,7 +224,7 @@ export class ExtensionHost {
   }
 
   async deactivateExtension(extensionId: string): Promise<boolean> {
-    const logFile = '/home/regaldragoon200/.config/vistudio/extension-debug.log'
+    const logFile = this.logFilePath
     const log = async (msg: string) => {
       const line = `[${new Date().toISOString()}] [DEACTIVATE] ${msg}\n`
       console.log(`[ExtensionHost] ${msg}`)
