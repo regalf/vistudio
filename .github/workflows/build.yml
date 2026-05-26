@@ -92,13 +92,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Rename Windows latest.yml → latest-windows.yml
+        run: mv release/latest.yml release/latest-windows.yml
+
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: vistudio-windows
           path: |
             release/*.exe
-            release/latest.yml
+            release/latest-windows.yml
           retention-days: 30
 
   release:
@@ -158,7 +161,7 @@ jobs:
           echo "Uploading Windows exe..."
           find . -name '*.exe' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
 
-          echo "Uploading latest.yml..."
+          echo "Uploading latest*.yml (auto-update metadata)..."
           find . -name 'latest*.yml' -not -name 'builder-debug*' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
 
           echo "Done"
