@@ -226,6 +226,12 @@ vistudio/
 
 ---
 
+## More Information
+
+For full documentation on the extension system, API reference, theming, and debugging, see **[Documentation.md](Documentation.md)**.
+
+---
+
 ## License
 
 [GNU General Public License v3.0](LICENSE)
