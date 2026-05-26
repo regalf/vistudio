@@ -2,10 +2,10 @@ name: Build and Release
 
 on:
   push:
-    branches: [master]
+    branches: [master, gpu-acceleration-test]
     tags: ['v*']
   pull_request:
-    branches: [master]
+    branches: [master, gpu-acceleration-test]
   workflow_dispatch:
     inputs:
       tag:
@@ -50,6 +50,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Add GPU experimental suffix on gpu branch
+        if: github.ref_name == 'gpu-acceleration-test'
+        run: node -e "const p=require('./package.json'); p.version+='-gpu-experimental'; require('fs').writeFileSync('./package.json', JSON.stringify(p, null, 2)+'\n')"
+
       - name: Build project
         run: npm run build
 
@@ -71,6 +75,7 @@ jobs:
     needs: lint
     if: |
       startsWith(github.ref, 'refs/tags/v') ||
+      github.ref_name == 'gpu-acceleration-test' ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -83,6 +88,10 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Add GPU experimental suffix on gpu branch
+        if: github.ref_name == 'gpu-acceleration-test'
+        run: node -e "const p=require('./package.json'); p.version+='-gpu-experimental'; require('fs').writeFileSync('./package.json', JSON.stringify(p, null, 2)+'\n')"
 
       - name: Build project
         run: npm run build
