@@ -87,21 +87,29 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Build Windows (portable + installer for auto-update metadata)
-        run: npx electron-builder --win portable --win nsis --publish never
+      - name: Build Windows portable
+        run: npx electron-builder --win portable --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Rename Windows latest.yml → latest-windows.yml
+      - name: Generate latest-windows.yml (auto-update metadata)
         run: |
-          echo "=== release/ contents ==="
-          find release/ -type f
-          if [ -f release/latest.yml ]; then
-            mv release/latest.yml release/latest-windows.yml
-            echo "Renamed latest.yml → latest-windows.yml"
-          else
-            echo "WARNING: latest.yml not generated"
-          fi
+          EXE=$(ls release/*.exe | head -1)
+          echo "Generating metadata for: $EXE"
+          SHA512=$(openssl dgst -sha512 -binary "$EXE" | base64 -w0)
+          SIZE=$(stat -c%s "$EXE")
+          VERSION=$(node -e "console.log(require('./package.json').version)")
+          cat > release/latest-windows.yml << EOF
+version: $VERSION
+files:
+  - url: $(basename "$EXE")
+    sha512: $SHA512
+    size: $SIZE
+path: $(basename "$EXE")
+sha512: $SHA512
+releaseDate: $(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+EOF
+          cat release/latest-windows.yml
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
