@@ -99,16 +99,17 @@ jobs:
           SHA512=$(openssl dgst -sha512 -binary "$EXE" | base64 -w0)
           SIZE=$(stat -c%s "$EXE")
           VERSION=$(node -e "console.log(require('./package.json').version)")
-          cat > release/latest-windows.yml << EOF
-version: $VERSION
-files:
-  - url: $(basename "$EXE")
-    sha512: $SHA512
-    size: $SIZE
-path: $(basename "$EXE")
-sha512: $SHA512
-releaseDate: $(date -u +%Y-%m-%dT%H:%M:%S.000Z)
-EOF
+          {
+            echo "version: $VERSION"
+            echo "files:"
+            echo "  - url: $(basename "$EXE")"
+            echo "    sha512: $SHA512"
+            echo "    size: $SIZE"
+            echo "path: $(basename "$EXE")"
+            echo "sha512: $SHA512"
+            echo "releaseDate: $(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+          } > release/latest-windows.yml
+          cat release/latest-windows.yml
           cat release/latest-windows.yml
 
       - name: Upload Windows artifact
