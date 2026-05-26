@@ -8,16 +8,20 @@ console.log('main.tsx loaded')
 window.addEventListener('error', (e) => {
   console.error('Global error:', e.error)
   if (window.electronAPI) {
-    window.electronAPI.fs.writeFile('/home/regaldragoon200/.config/vistudio/runtime-error.log', 
-      `[${new Date().toISOString()}] ${e.error?.stack || e.message}\n`).catch(() => {})
+    window.electronAPI.getDataPath().then(dataPath => {
+      window.electronAPI.fs.writeFile(dataPath + '/runtime-error.log', 
+        `[${new Date().toISOString()}] ${e.error?.stack || e.message}\n`).catch(() => {})
+    }).catch(() => {})
   }
 })
 
 window.addEventListener('unhandledrejection', (e) => {
   console.error('Unhandled rejection:', e.reason)
   if (window.electronAPI) {
-    window.electronAPI.fs.writeFile('/home/regaldragoon200/.config/vistudio/runtime-error.log', 
-      `[${new Date().toISOString()}] UNHANDLED: ${e.reason?.stack || e.reason}\n`).catch(() => {})
+    window.electronAPI.getDataPath().then(dataPath => {
+      window.electronAPI.fs.writeFile(dataPath + '/runtime-error.log', 
+        `[${new Date().toISOString()}] UNHANDLED: ${e.reason?.stack || e.reason}\n`).catch(() => {})
+    }).catch(() => {})
   }
 })
 

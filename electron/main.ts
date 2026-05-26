@@ -116,8 +116,12 @@ function createWindow() {
   })
 }
 
+ipcMain.handle('app:getDataPath', () => app.getPath('userData'))
+
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
+
 ipcMain.on('window:maximize', () => mainWindow?.isMaximized() ? mainWindow?.unmaximize() : mainWindow?.maximize())
+
 ipcMain.on('window:close', () => mainWindow?.close())
 
 // IPC Handlers

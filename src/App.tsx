@@ -447,21 +447,23 @@ const App: React.FC = () => {
     if (window.electronAPI) {
       console.log('[App] electronAPI available')
       window.electronAPI.log('[App] Extension system initializing').catch(() => {})
-      const host = new ExtensionHost(
-        () => getActiveTabContentRef.current(),
-        (content: string) => setActiveTabContentRef.current(content),
-        (languageId: string) => setEditorLanguageRef.current(languageId),
-        () => getWorkspacePathRef.current(),
-        window.electronAPI.fs,
-        window.electronAPI.terminal,
-        { appPath: '/opt/vistudio' },
-        themeManager
-      )
-      extensionHostRef.current = host
-
-      const loadExtensions = async () => {
+      const initExtensions = async () => {
         try {
-          const defaultExtDir = '/home/regaldragoon200/.config/vistudio/extensions'
+          const dataPath = await window.electronAPI.getDataPath()
+          const host = new ExtensionHost(
+            () => getActiveTabContentRef.current(),
+            (content: string) => setActiveTabContentRef.current(content),
+            (languageId: string) => setEditorLanguageRef.current(languageId),
+            () => getWorkspacePathRef.current(),
+            window.electronAPI.fs,
+            window.electronAPI.terminal,
+            { appPath: '/opt/vistudio' },
+            themeManager,
+            dataPath + '/extension-debug.log'
+          )
+          extensionHostRef.current = host
+
+          const defaultExtDir = dataPath + '/extensions'
           const exists = await window.electronAPI.fs.exists(defaultExtDir)
           if (exists) {
             const count = await host.loadExtensionsFromDirectory(defaultExtDir)
@@ -475,7 +477,7 @@ const App: React.FC = () => {
           console.error('Failed to load extensions:', e)
         }
       }
-      loadExtensions()
+      initExtensions()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -1018,6 +1020,7 @@ const App: React.FC = () => {
         await extensionHostRef.current.deactivateExtension(id)
         const result = await window.electronAPI.extension.delete(ext.path)
         if (result.success) {
+          const dataPath = await window.electronAPI.getDataPath()
           extensionHostRef.current = new ExtensionHost(
             () => getActiveTabContentRef.current(),
             (content: string) => setActiveTabContentRef.current(content),
@@ -1026,9 +1029,10 @@ const App: React.FC = () => {
             window.electronAPI.fs,
             window.electronAPI.terminal,
             { appPath: '/opt/vistudio' },
-            themeManager
+            themeManager,
+            dataPath + '/extension-debug.log'
           )
-          const defaultExtDir = '/home/regaldragoon200/.config/vistudio/extensions'
+          const defaultExtDir = dataPath + '/extensions'
           const count = await extensionHostRef.current.loadExtensionsFromDirectory(defaultExtDir)
           setExtensionsLoaded(count)
           setExtensionsList(extensionHostRef.current.getAllExtensions())
