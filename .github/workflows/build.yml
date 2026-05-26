@@ -52,6 +52,21 @@ jobs:
           path: release/latest.yml
           retention-days: 30
 
+      - name: Silent replace assets in latest release (master push only)
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: |
+          TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+          if [ -n "$TAG" ]; then
+            echo "Replacing assets in latest release: $TAG"
+            gh release upload "$TAG" release/*.AppImage --clobber
+            gh release upload "$TAG" release/latest.yml --clobber
+            echo "Done - binary replaced in existing release $TAG"
+          else
+            echo "No existing release found - skipping silent replace"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
