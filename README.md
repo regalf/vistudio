@@ -254,7 +254,7 @@ vistudio/
 
 ## More Information
 
-For full documentation on the extension system, API reference, theming, and debugging, see **[Documentation.md](Documentation.md)**.
+For full documentation on the extension system, API reference, theming, and debugging, see the **[Wiki](https://github.com/regalf/vistudio/wiki)** or **[Documentation.md](Documentation.md)**.
 
 ---
 
