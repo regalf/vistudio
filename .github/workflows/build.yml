@@ -87,13 +87,21 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Build Windows portable
-        run: npx electron-builder --win portable --publish never
+      - name: Build Windows (portable + installer for auto-update metadata)
+        run: npx electron-builder --win portable --win nsis --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename Windows latest.yml → latest-windows.yml
-        run: mv release/latest.yml release/latest-windows.yml
+        run: |
+          echo "=== release/ contents ==="
+          find release/ -type f
+          if [ -f release/latest.yml ]; then
+            mv release/latest.yml release/latest-windows.yml
+            echo "Renamed latest.yml → latest-windows.yml"
+          else
+            echo "WARNING: latest.yml not generated"
+          fi
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
@@ -101,7 +109,7 @@ jobs:
           name: vistudio-windows
           path: |
             release/*.exe
-            release/latest-windows.yml
+            release/latest-*.yml
           retention-days: 30
 
   release:
