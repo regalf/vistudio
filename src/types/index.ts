@@ -143,6 +143,15 @@ export interface ElectronAPI {
     push: (dir: string) => Promise<{ success: boolean; error?: string }>
     allBranches: (dir: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
   }
+  update: {
+    check: () => Promise<{ success: boolean; error?: string }>
+    download: () => Promise<{ success: boolean; error?: string }>
+    install: () => Promise<{ success: boolean; error?: string }>
+    onAvailable: (callback: (info: any) => void) => void
+    onNotAvailable: (callback: () => void) => void
+    onDownloadProgress: (callback: (progress: any) => void) => void
+    onDownloaded: (callback: () => void) => void
+  }
 }
 
 declare global {

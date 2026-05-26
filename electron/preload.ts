@@ -84,6 +84,23 @@ try {
     pull: (dir: string) => ipcRenderer.invoke('git:pull', dir),
     push: (dir: string) => ipcRenderer.invoke('git:push', dir),
     allBranches: (dir: string) => ipcRenderer.invoke('git:allBranches', dir)
+  },
+  update: {
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.invoke('update:download'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onAvailable: (callback: (info: any) => void) => {
+      ipcRenderer.on('update:available', (_, info) => callback(info))
+    },
+    onNotAvailable: (callback: () => void) => {
+      ipcRenderer.on('update:not-available', () => callback())
+    },
+    onDownloadProgress: (callback: (progress: any) => void) => {
+      ipcRenderer.on('update:download-progress', (_, progress) => callback(progress))
+    },
+    onDownloaded: (callback: () => void) => {
+      ipcRenderer.on('update:downloaded', () => callback())
+    }
   }
   })
 } catch (error) {

@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { spawn, execSync } from 'child_process'
+import { autoUpdater } from 'electron-updater'
 
 // GPU acceleration - Skylake GT2 via Mesa 26
 app.commandLine.appendSwitch('no-sandbox')
@@ -656,9 +657,74 @@ ipcMain.handle('git:allBranches', async (_, dir: string) => {
   return { ...runGit(dir, ['branch', '-a']), isRepo: true }
 })
 
+// Auto-updater configuration
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = true
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'regalf',
+  repo: 'vistudio',
+  private: false
+})
+
+function setupAutoUpdater() {
+  autoUpdater.on('update-available', (info) => {
+    mainWindow?.webContents.send('update:available', info)
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    mainWindow?.webContents.send('update:not-available')
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow?.webContents.send('update:download-progress', progress)
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    mainWindow?.webContents.send('update:downloaded')
+  })
+
+  autoUpdater.on('error', (err) => {
+    console.error('[AUTO-UPDATE] Error:', err.message)
+  })
+}
+
+ipcMain.handle('update:check', async () => {
+  try {
+    autoUpdater.checkForUpdates()
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('update:download', async () => {
+  try {
+    autoUpdater.downloadUpdate()
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('update:install', async () => {
+  try {
+    setImmediate(() => autoUpdater.quitAndInstall())
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
 app.whenReady().then(() => {
   createMenu()
   createWindow()
+  setupAutoUpdater()
+
+  // Check for updates after a short delay
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(() => {})
+  }, 5000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
