@@ -88,7 +88,9 @@ jobs:
             OTHER="master"
           fi
           echo "Triggering workflow on $OTHER branch..."
-          gh workflow run "${{ github.workflow }}" --ref "$OTHER" --repo "${{ github.repository }}" --field buildAll=false
+          gh workflow run "${{ github.workflow }}" --ref "$OTHER" --repo "${{ github.repository }}" \
+            --field buildAll=false \
+            --field silent=${{ github.event.inputs.silent }}
           echo "Done — build started on $OTHER"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -179,6 +181,11 @@ jobs:
             echo "Updating latest release: $TAG"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.tag }}" ]]; then
             TAG="${{ github.event.inputs.tag }}"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "workflow_dispatch (no tag, no silent) — creating release from package.json"
+            VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+            TAG="v${VERSION}"
+            if [[ "$IS_GPU" == "true" ]]; then TAG="${TAG}-gpu-experimental"; fi
           else
             TAG="${GITHUB_REF_NAME}"
           fi
