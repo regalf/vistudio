@@ -687,12 +687,41 @@ function setupAutoUpdater() {
 
   autoUpdater.on('error', (err) => {
     console.error('[AUTO-UPDATE] Error:', err.message)
+    mainWindow?.webContents.send('update:error', err.message)
+  })
+}
+
+const UPDATE_TIMEOUT = 10000 // 10 second timeout for update checks
+
+async function checkForUpdatesWithTimeout(): Promise<void> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      console.error('[AUTO-UPDATE] Timeout - no response from update server')
+      mainWindow?.webContents.send('update:error', 'Update check timed out. Check your internet connection.')
+      resolve()
+    }, UPDATE_TIMEOUT)
+
+    const cleanup = () => {
+      clearTimeout(timeout)
+      resolve()
+    }
+
+    autoUpdater.once('update-available', cleanup)
+    autoUpdater.once('update-not-available', cleanup)
+    autoUpdater.once('error', cleanup)
+
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.error('[AUTO-UPDATE] checkForUpdates failed:', err.message)
+      mainWindow?.webContents.send('update:error', err.message)
+      clearTimeout(timeout)
+      resolve()
+    })
   })
 }
 
 ipcMain.handle('update:check', async () => {
   try {
-    autoUpdater.checkForUpdates()
+    await checkForUpdatesWithTimeout()
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -740,7 +769,7 @@ app.whenReady().then(() => {
         if (saved['update.checkOnStartup'] === false) return
       }
     } catch (_) {}
-    autoUpdater.checkForUpdates().catch(() => {})
+    checkForUpdatesWithTimeout().catch(() => {})
   }, 5000)
 
   app.on('activate', () => {

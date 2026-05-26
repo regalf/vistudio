@@ -101,6 +101,9 @@ try {
     },
     onDownloaded: (callback: () => void) => {
       ipcRenderer.on('update:downloaded', () => callback())
+    },
+    onError: (callback: (msg: string) => void) => {
+      ipcRenderer.on('update:error', (_, msg) => callback(msg))
     }
   }
   })
