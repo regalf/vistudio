@@ -3,13 +3,13 @@ import { join } from 'path'
 import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { spawn, execSync } from 'child_process'
 
-// GPU fixes - must be set before app ready
+// GPU acceleration - Skylake GT2 via Mesa 26
 app.commandLine.appendSwitch('no-sandbox')
-app.commandLine.appendSwitch('disable-gpu')
-app.commandLine.appendSwitch('disable-gpu-compositing')
-app.commandLine.appendSwitch('disable-software-rasterizer')
 app.commandLine.appendSwitch('disable-dev-shm-usage')
-app.disableHardwareAcceleration()
+app.commandLine.appendSwitch('enable-gpu-rasterization')
+app.commandLine.appendSwitch('enable-native-gpu-memory-buffers')
+app.commandLine.appendSwitch('ignore-gpu-blocklist')
+app.commandLine.appendSwitch('ozone-platform-hint', 'auto')
 
 let mainWindow: BrowserWindow | null = null
 
