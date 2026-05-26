@@ -94,8 +94,11 @@ jobs:
             TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null) || TAG=""
             echo "Latest tag: '$TAG'"
             if [[ -z "$TAG" ]]; then
-              echo "No release found. Falling back to version from package.json..."
-              TAG="v$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')"
+              echo "No release found. Falling back to version from git tag or package.json..."
+              TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG=""
+              if [[ -z "$TAG" ]]; then
+                TAG="v$(grep '"version"' "${{ github.workspace }}/package.json" 2>/dev/null | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')"
+              fi
               echo "Fallback tag: $TAG"
             fi
             echo "Updating latest release: $TAG"
