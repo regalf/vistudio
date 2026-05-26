@@ -87,7 +87,7 @@ jobs:
             OTHER="master"
           fi
           echo "Triggering workflow on $OTHER branch..."
-          gh workflow run "${{ github.workflow }}" --ref "$OTHER" --repo "${{ github.repository }}"
+          gh workflow run "${{ github.workflow }}" --ref "$OTHER" --repo "${{ github.repository }}" --inputs '{"buildAll":false}'
           echo "Done — build started on $OTHER"
 
   build-windows:
