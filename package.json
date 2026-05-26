@@ -1,6 +1,6 @@
 {
   "name": "vistudio",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "A lightweight, extensible code editor built with Electron, React, TypeScript, and Monaco Editor",
   "main": "dist-electron/main.js",
   "author": {
