@@ -112,16 +112,19 @@ jobs:
           TAG="${{ steps.target.outputs.tag }}"
           echo "Target tag: $TAG"
 
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" &>/dev/null; then
-            echo "Release $TAG already exists — uploading assets with clobber"
-            gh release upload "$TAG" vistudio-AppImage/*.AppImage vistudio-latest-yml/latest.yml --clobber --repo "$GITHUB_REPOSITORY"
-          else
+          # Create release if it doesn't exist
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" &>/dev/null; then
             echo "Creating new release $TAG"
-            gh release create "$TAG" \
-              vistudio-AppImage/*.AppImage \
-              vistudio-latest-yml/latest.yml \
-              --repo "$GITHUB_REPOSITORY" \
-              --generate-notes
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
           fi
+
+          # Upload assets (handle path with find in case of dir nesting)
+          echo "Uploading AppImage..."
+          find . -name '*.AppImage' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
+
+          echo "Uploading latest.yml..."
+          find . -name 'latest.yml' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
+
+          echo "Done"
         env:
           GH_TOKEN: ${{ github.token }}
