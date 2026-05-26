@@ -90,6 +90,7 @@ npm run start        # Launch ViStudio (development)
 - **Git integration** — Source control panel (status, diff, commit)
 - **File icons** — 133+ SVG icons for file type identification
 - **Windows support** (beta) — Cross-compiled from Linux, runs on Windows 10/11 with PowerShell terminal and auto-updater
+- **GPU acceleration** — Hardware-accelerated rendering with Mesa 26 (Skylake GT2+); GPU blocklist ignored for broad compatibility
 
 ---
 
