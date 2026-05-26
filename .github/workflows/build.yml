@@ -127,26 +127,32 @@ jobs:
         run: |
           echo "Event: ${{ github.event_name }}"
           echo "Ref: ${GITHUB_REF_NAME}"
+          echo "Branch: ${{ github.ref_name }}"
           echo "Silent input: '${{ github.event.inputs.silent }}'"
-          SILENT=false
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.silent }}" == "true" ]]; then
-            SILENT=true
-          fi
-          if [[ "${{ github.ref_name }}" == "gpu-acceleration-test" && "${{ github.event_name }}" == "push" ]]; then
-            SILENT=true
-            echo "GPU branch push — silent replacing latest release"
-          fi
-          if [[ "$SILENT" == "true" ]]; then
+
+          BRANCH="${{ github.ref_name }}"
+          IS_GPU=false
+          if [[ "$BRANCH" == "gpu-acceleration-test" ]]; then IS_GPU=true; fi
+
+          # Determine tag
+          if [[ "${{ github.event_name }}" == "push" && "$IS_GPU" == "true" && ! "${{ github.ref }}" =~ ^refs/tags/ ]]; then
+            echo "GPU branch push — creating/updating gpu-experimental release"
+            VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+            TAG="v${VERSION}-gpu-experimental"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.silent }}" == "true" ]]; then
             echo "Silent mode: finding latest release..."
-            TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null) || TAG=""
+            if [[ "$IS_GPU" == "true" ]]; then
+              TAG=$(gh release list --limit 5 --json tagName --jq '.[].tagName' 2>/dev/null | grep -i gpu-experimental | head -1) || TAG=""
+            else
+              TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null) || TAG=""
+            fi
             echo "Latest tag: '$TAG'"
             if [[ -z "$TAG" ]]; then
-              echo "No release found. Falling back to version from git tag or package.json..."
-              TAG=$(git describe --tags --abbrev=0 2>/dev/null) || TAG=""
-              if [[ -z "$TAG" ]]; then
-                TAG="v$(grep '"version"' "${{ github.workspace }}/package.json" 2>/dev/null | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')"
-              fi
-              echo "Fallback tag: $TAG"
+              echo "No release found. Falling back to version from package.json..."
+              VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+              TAG="v${VERSION}"
+              if [[ "$IS_GPU" == "true" ]]; then TAG="${TAG}-gpu-experimental"; fi
             fi
             echo "Updating latest release: $TAG"
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ github.event.inputs.tag }}" ]]; then
