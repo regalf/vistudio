@@ -188,6 +188,21 @@ vs.workspace.registerTheme({
 └──────────────────────────────────────┘
 ```
 
+### Build & Release
+
+The project uses **GitHub Actions** to build and release automatically:
+
+- **Push to `master`** — builds the AppImage and uploads it as a build artifact
+- **Push a tag `v*`** — builds and creates a **GitHub Release** with the AppImage attached
+- **Auto-update** — the app checks for new releases via `electron-updater` and prompts to update
+
+To create a release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 ### Tech Stack
 
 | Component | Technology |
