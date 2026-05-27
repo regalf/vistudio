@@ -52,6 +52,19 @@ npm install
 
 Launches a Vite dev server on port 5173 and opens Electron with hot-reload.
 
+> **Windows (dev)**: `run.sh` is a bash script — use npm scripts directly:
+> ```powershell
+> npm run build                   # TypeScript check + Vite build
+> npx electron .                  # Run the built app
+> ```
+> For hot-reload, start Vite in one terminal (`npx vite`) and Electron in another:
+> ```powershell
+> # Terminal 1
+> npx vite
+> # Terminal 2
+> $env:VITE_DEV_SERVER_URL="http://localhost:5173"; npx electron .
+> ```
+
 ### Build Executable
 
 ```bash
@@ -63,6 +76,14 @@ npm run dist:nsis    # Windows NSIS installer (requires Wine)
 ```
 
 Output goes to `release/` — standalone executables (no Node.js or npm required).
+
+> **Cross-compile from Linux** (recommended): `npm run dist:win` produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run.
+
+> **Native build on Windows**: All `npm run dist:*` scripts work natively on Windows too. The simplest commands:
+> ```powershell
+> npm run dist:win     # Build for Windows (portable .exe)
+> npm run dist:nsis    # Build NSIS installer (no Wine needed on Windows)
+> ```
 
 > **Windows support** (beta, v0.11.0+):
 > - Cross-compiled from Linux using electron-builder — **no Windows machine needed** to build
