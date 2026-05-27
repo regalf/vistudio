@@ -11,11 +11,13 @@ import CommandPalette from './components/CommandPalette'
 import SearchPanel from './components/SearchPanel'
 import SettingsPanel from './components/SettingsPanel'
 import UpdatePanel from './components/UpdatePanel'
+import WelcomePage from './components/WelcomePage'
 import './styles/global.css'
 import { EditorTab, EditorSettings, CommandItem } from './types'
 import { ExtensionHost } from './core/ExtensionHost'
 import { ExtensionInfo, RegisteredTheme } from './types/extension'
 import { themeManager } from './core/ThemeManager'
+import pkg from '../package.json'
 
 const BUILTIN_COMMANDS: CommandItem[] = [
   { id: 'menu:new-file', label: 'New File', category: 'File', shortcut: 'Ctrl+N', type: 'command' },
@@ -127,6 +129,8 @@ const App: React.FC = () => {
   const [extensionThemes, setExtensionThemes] = useState<RegisteredTheme[]>([])
   const [updatePanelVisible, setUpdatePanelVisible] = useState(false)
   const [updateNotification, setUpdateNotification] = useState<{ version: string } | null>(null)
+  const [recentFolders, setRecentFolders] = useState<string[]>([])
+  const appVersion = pkg.version
   const extensionHostRef = useRef<ExtensionHost | null>(null)
 
   const syncExtensionThemes = useCallback(() => {
@@ -376,6 +380,9 @@ const App: React.FC = () => {
       window.electronAPI.settings.load().then(result => {
         if (result.success && result.settings) {
           setSettings(prev => ({ ...prev, ...result.settings }))
+          if (result.settings['recentFolders']) {
+            setRecentFolders(result.settings['recentFolders'])
+          }
         }
       }).catch(() => {})
     }
@@ -493,6 +500,29 @@ const App: React.FC = () => {
     }
   }, [settings])
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const action = (e as CustomEvent).detail as string
+      handleMenuActionRef.current(action === 'help-docs' ? '' : '')
+      switch (action) {
+        case 'help-docs':
+          window.open('https://github.com/regalf/vistudio/wiki', '_blank')
+          break
+        case 'help-github':
+          window.open('https://github.com/regalf/vistudio', '_blank')
+          break
+        case 'manage-extensions':
+          setExtensionsPanelVisible(true)
+          break
+        case 'check-updates':
+          setUpdatePanelVisible(true)
+          break
+      }
+    }
+    window.addEventListener('welcome-action', handler)
+    return () => window.removeEventListener('welcome-action', handler)
+  }, [])
+
   const activeTab = tabs.find(t => t.id === activeTabId) || null
 
   const openFileInTab = useCallback(async (path: string | null, content: string, isNew: boolean = false) => {
@@ -600,11 +630,40 @@ const App: React.FC = () => {
     try {
       if (window.electronAPI) {
         const path = await window.electronAPI.dialog.openFolder()
-        if (path) setFolderPath(path)
+        if (path) {
+          setFolderPath(path)
+          setRecentFolders(prev => {
+            const next = [path, ...prev.filter(p => p !== path)].slice(0, 10)
+            window.electronAPI?.settings.save({ recentFolders: next }).catch(() => {})
+            return next
+          })
+        }
       }
     } catch (e) {
       console.error('Failed to open folder:', e)
     }
+  }, [])
+
+  const handleOpenRecent = useCallback((path: string) => {
+    setFolderPath(path)
+    setRecentFolders(prev => {
+      const next = [path, ...prev.filter(p => p !== path)].slice(0, 10)
+      window.electronAPI?.settings.save({ recentFolders: next }).catch(() => {})
+      return next
+    })
+  }, [])
+
+  const handleRemoveRecent = useCallback((path: string) => {
+    setRecentFolders(prev => {
+      const next = prev.filter(p => p !== path)
+      window.electronAPI?.settings.save({ recentFolders: next }).catch(() => {})
+      return next
+    })
+  }, [])
+
+  const handleClearRecents = useCallback(() => {
+    setRecentFolders([])
+    window.electronAPI?.settings.save({ recentFolders: [] }).catch(() => {})
   }, [])
 
   const handleOpenProject = useCallback(async () => {
@@ -1095,25 +1154,34 @@ const App: React.FC = () => {
         key: 'editor-area',
         style: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }
       }, [
-      React.createElement(TabBar, {
-        key: 'tabbar',
-        tabs: tabs,
-        activeTabId: activeTabId,
-        onSwitch: switchTab,
-        onClose: closeTab,
-        onReorder: handleTabReorder
-      }),
-        React.createElement(EditorPanel, {
+        tabs.length > 0 && React.createElement(TabBar, {
+          key: 'tabbar',
+          tabs: tabs,
+          activeTabId: activeTabId,
+          onSwitch: switchTab,
+          onClose: closeTab,
+          onReorder: handleTabReorder
+        }),
+        tabs.length > 0 ? React.createElement(EditorPanel, {
           key: 'editor',
           filePath: activeTab?.path || null,
           fileName: activeTab?.name || '',
           content: activeTab?.content || '',
           language: activeTab?.language || 'plaintext',
           onChange: handleEditorChange,
-          showWelcome: tabs.length === 0,
           settings,
           themeName: settings['workbench.colorTheme'],
           extensionThemes
+        }) : React.createElement(WelcomePage, {
+          key: 'welcome',
+          version: appVersion,
+          recentFolders,
+          onOpenFolder: () => handleMenuAction('menu:open-folder'),
+          onNewFile: () => handleMenuAction('menu:new-file'),
+          onNewProject: () => handleMenuAction('menu:new-project'),
+          onOpenRecent: handleOpenRecent,
+          onRemoveRecent: handleRemoveRecent,
+          onClearRecents: handleClearRecents
         }),
         terminalVisible && React.createElement('div', {
           key: 'terminal-container',

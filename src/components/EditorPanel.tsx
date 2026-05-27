@@ -2,21 +2,20 @@ import React, { useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
 import { tokenHighlightRegistry } from '../core/TokenHighlightRegistry'
-import { EditorSettings, RegisteredTheme } from '../types'
+import { RegisteredTheme } from '../types'
 
 interface EditorPanelProps {
   filePath: string | null
-  fileName: string | null
+  fileName: string
   content: string
   language: string
   onChange: (value: string) => void
-  showWelcome: boolean
-  settings: EditorSettings
+  settings: Record<string, any>
   themeName: string
   extensionThemes: RegisteredTheme[]
 }
 
-const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, language, onChange, showWelcome, settings, themeName, extensionThemes }) => {
+const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, language, onChange, settings, themeName, extensionThemes }) => {
   const editorRef = useRef<any>(null)
   const monacoRef = useRef<any>(null)
   const themeDefined = useRef(false)
@@ -299,44 +298,6 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
       highlightWithTimeout()
       return result
     }
-  }
-
-  if (showWelcome) {
-    return React.createElement('div', {
-      style: {
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--bg-primary)',
-        color: 'var(--text-secondary)',
-        gap: '20px'
-      }
-    }, [
-      React.createElement('h1', {
-        key: 'title',
-        style: {
-          fontSize: '48px',
-          fontWeight: 300,
-          color: 'var(--text-active)',
-          margin: 0,
-          letterSpacing: '-1px'
-        }
-      }, 'ViStudio'),
-      React.createElement('p', {
-        key: 'subtitle',
-        style: { fontSize: '16px', margin: 0, color: 'var(--text-secondary)' }
-      }, 'A modern, extensible code editor'),
-      React.createElement('div', {
-        key: 'shortcuts',
-        style: { marginTop: '30px', textAlign: 'center' }
-      }, [
-        React.createElement('p', { key: 'p1', style: { margin: '8px 0', fontSize: '14px', color: 'var(--text-secondary)' } }, 'Open a file or folder to get started'),
-        React.createElement('p', { key: 'p2', style: { margin: '8px 0', fontSize: '13px', fontFamily: 'monospace', color: 'var(--accent)' } }, 'Ctrl+O - Open File'),
-        React.createElement('p', { key: 'p3', style: { margin: '8px 0', fontSize: '13px', fontFamily: 'monospace', color: 'var(--accent)' } }, 'Ctrl+Shift+O - Open Folder')
-      ])
-    ])
   }
 
   return React.createElement('div', {
