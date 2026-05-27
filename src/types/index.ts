@@ -119,6 +119,8 @@ export interface ElectronAPI {
     list: () => Promise<{ success: boolean; extensions?: any[]; error?: string }>
     loadDirectory: (extensionsDir: string) => Promise<{ success: boolean; loadedCount?: number; error?: string }>
     delete: (extensionPath: string) => Promise<{ success: boolean; error?: string }>
+    listRecommended: () => Promise<{ success: boolean; extensions?: Array<{ id: string; name: string; description: string; version: string }>; error?: string }>
+    installRecommended: () => Promise<{ success: boolean; installed?: number; error?: string }>
   }
   appReady: () => void
   settings: {

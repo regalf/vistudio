@@ -500,6 +500,73 @@ ipcMain.handle('extension:delete', async (_, extensionPath: string) => {
   }
 })
 
+// Bundled recommended extensions
+const getBundledExtensionsDir = () => {
+  const devPath = join(__dirname, '..', 'extensions')
+  if (existsSync(devPath)) return devPath
+  return null
+}
+
+ipcMain.handle('extension:listRecommended', async () => {
+  try {
+    const dir = getBundledExtensionsDir()
+    if (!dir) return { success: true, extensions: [] }
+    const items = readdirSync(dir, { withFileTypes: true })
+    const extensions: Array<{ id: string; name: string; description: string; version: string }> = []
+    for (const item of items) {
+      if (!item.isDirectory()) continue
+      const manifestPath = join(dir, item.name, 'extension.json')
+      if (!existsSync(manifestPath)) continue
+      try {
+        const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+        extensions.push({
+          id: manifest.name || item.name,
+          name: manifest.name || item.name,
+          description: manifest.description || '',
+          version: manifest.version || '0.0.0'
+        })
+      } catch (_) {}
+    }
+    return { success: true, extensions }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('extension:installRecommended', async () => {
+  try {
+    const bundledDir = getBundledExtensionsDir()
+    if (!bundledDir) return { success: false, error: 'No bundled extensions found' }
+    const userDataExtDir = join(app.getPath('userData'), 'extensions')
+    if (!existsSync(userDataExtDir)) mkdirSync(userDataExtDir, { recursive: true })
+
+    const items = readdirSync(bundledDir, { withFileTypes: true })
+    let installed = 0
+    for (const item of items) {
+      if (!item.isDirectory()) continue
+      const srcPath = join(bundledDir, item.name)
+      const manifestPath = join(srcPath, 'extension.json')
+      if (!existsSync(manifestPath)) continue
+      const destPath = join(userDataExtDir, item.name)
+      if (!existsSync(destPath)) {
+        mkdirSync(destPath, { recursive: true })
+        const files = readdirSync(srcPath)
+        for (const file of files) {
+          const content = readFileSync(join(srcPath, file))
+          writeFileSync(join(destPath, file), content)
+        }
+        const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+        const id = manifest.name || item.name
+        extensionPaths.set(id, destPath)
+        installed++
+      }
+    }
+    return { success: true, installed }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
 // Settings IPC Handlers
 const SETTINGS_PATH = join(app.getPath('userData'), 'settings.json')
 

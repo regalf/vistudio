@@ -59,7 +59,9 @@ try {
     deactivate: (extensionId: string) => ipcRenderer.invoke('extension:deactivate', extensionId),
     list: () => ipcRenderer.invoke('extension:list'),
     loadDirectory: (extensionsDir: string) => ipcRenderer.invoke('extension:loadDirectory', extensionsDir),
-    delete: (extensionPath: string) => ipcRenderer.invoke('extension:delete', extensionPath)
+    delete: (extensionPath: string) => ipcRenderer.invoke('extension:delete', extensionPath),
+    listRecommended: () => ipcRenderer.invoke('extension:listRecommended'),
+    installRecommended: () => ipcRenderer.invoke('extension:installRecommended')
   },
   appReady: () => ipcRenderer.send('app:ready'),
   settings: {

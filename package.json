@@ -44,7 +44,8 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
-      "public/**/*"
+      "public/**/*",
+      "extensions/**/*"
     ],
     "extraMetadata": {
       "main": "dist-electron/main.js"

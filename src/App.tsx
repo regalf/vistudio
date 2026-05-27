@@ -1481,6 +1481,23 @@ const App: React.FC = () => {
       onDeactivate: handleDeactivateExtension,
       onDelete: handleDeleteExtension,
       onInstall: () => handleMenuAction('menu:install-extension'),
+      onInstallRecommended: async () => {
+        if (!window.electronAPI) return 0
+        const result = await window.electronAPI.extension.installRecommended()
+        if (result.success && result.installed && result.installed > 0) {
+          const dataPath = await window.electronAPI.getDataPath()
+          const host = extensionHostRef.current
+          if (host) {
+            const count = await host.loadExtensionsFromDirectory(dataPath + '/extensions')
+            setExtensionsLoaded(count)
+            setExtensionsList(host.getAllExtensions())
+            await host.activateExtensionsByEvent('*')
+            setExtensionsList(host.getAllExtensions())
+            syncExtensionThemes()
+          }
+        }
+        return result.installed || 0
+      },
       onClose: () => setExtensionsPanelVisible(false)
     }),
     unsavedChangesModal && React.createElement('div', {

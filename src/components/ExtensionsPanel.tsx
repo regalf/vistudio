@@ -7,6 +7,7 @@ interface ExtensionsPanelProps {
   onDeactivate: (id: string) => Promise<void>
   onDelete: (id: string) => void
   onInstall: () => void
+  onInstallRecommended: () => Promise<number>
   onClose: () => void
 }
 
@@ -16,10 +17,12 @@ const ExtensionsPanel: React.FC<ExtensionsPanelProps> = ({
   onDeactivate,
   onDelete,
   onInstall,
+  onInstallRecommended,
   onClose
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [installingRec, setInstallingRec] = useState(false)
 
   const handleToggle = useCallback(async (ext: ExtensionInfo) => {
     console.log('[ExtensionsPanel] Toggle clicked for:', ext.id, 'current isActive:', ext.isActive)
@@ -99,19 +102,45 @@ const ExtensionsPanel: React.FC<ExtensionsPanelProps> = ({
     React.createElement('div', {
       key: 'actions',
       style: { padding: '10px', borderBottom: '1px solid var(--border-primary)' }
-    }, React.createElement('button', {
-      onClick: onInstall,
-      style: {
-        width: '100%',
-        padding: '8px',
-        background: 'var(--accent)',
-        border: 'none',
-        color: 'var(--text-button)',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontSize: '13px'
-      }
-    }, 'Install Extension...')),
+    }, [
+      React.createElement('button', {
+        key: 'install',
+        onClick: onInstall,
+        style: {
+          width: '100%',
+          padding: '8px',
+          background: 'var(--accent)',
+          border: 'none',
+          color: 'var(--text-button)',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          marginBottom: extensions.length === 0 ? '8px' : '0'
+        }
+      }, 'Install Extension...'),
+      extensions.length === 0 && React.createElement('button', {
+        key: 'recommended',
+        onClick: async () => {
+          setInstallingRec(true)
+          try {
+            await onInstallRecommended()
+          } finally {
+            setInstallingRec(false)
+          }
+        },
+        style: {
+          width: '100%',
+          padding: '8px',
+          background: 'var(--accent)',
+          border: 'none',
+          color: 'var(--text-button)',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          opacity: installingRec ? 0.7 : 1
+        }
+      }, installingRec ? 'Installing...' : 'Install Recommended Extensions')
+    ]),
     React.createElement('div', {
       key: 'list',
       style: { flex: 1, overflowY: 'auto', padding: '10px' }
