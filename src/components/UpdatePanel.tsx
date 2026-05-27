@@ -32,12 +32,18 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
-  const [currentVersion] = useState('0.9.0')
+  const [currentVersion, setCurrentVersion] = useState('—')
   const checkNotifOn = settings['update.checkOnStartup'] !== false
   const mountedRef = useRef(true)
 
   useEffect(() => {
     return () => { mountedRef.current = false }
+  }, [])
+
+  useEffect(() => {
+    window.electronAPI?.getVersion().then(v => {
+      if (mountedRef.current) setCurrentVersion(v)
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {

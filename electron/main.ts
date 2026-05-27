@@ -122,6 +122,7 @@ function createWindow() {
   })
 }
 
+ipcMain.handle('app:getVersion', () => app.getVersion())
 ipcMain.handle('app:getDataPath', () => app.getPath('userData'))
 
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
