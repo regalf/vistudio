@@ -18,15 +18,16 @@ Built as part of the [ViTools](https://github.com/regalf/ViTools) suite.
 
 #### Development (from source)
 
-- **Linux** (Arch Linux recommended)
-- **Electron 42** (system-installed: `pacman -S electron`)
+- **Linux** (Arch Linux recommended) or **Windows 10/11** (experimental)
+- **Electron 42** (system-installed on Linux: `pacman -S electron`; on Windows Electron is bundled via npm)
 - **Node.js 18+**
 - **npm**
 
-#### Runtime (pre-built AppImage)
+#### Runtime (pre-built)
 
-- **Linux** with **FUSE 2** (`libfuse2` on Debian/Ubuntu, `fuse2` on Arch)
-- No Node.js, npm, or Electron required — the AppImage is self-contained
+- **Linux**: AppImage with **FUSE 2** (`libfuse2` on Debian/Ubuntu, `fuse2` on Arch)
+- **Windows 10/11** (beta): Portable `.exe` — no extra dependencies required
+- No Node.js, npm, or Electron required — the executable is self-contained
 
 Install FUSE:
 ```bash
@@ -63,7 +64,14 @@ npm run dist:nsis    # Windows NSIS installer (requires Wine)
 
 Output goes to `release/` — standalone executables (no Node.js or npm required).
 
-> **Windows cross-compilation** (beta): build from Linux with `dist:win`. The `dist:win` command produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run. Requires Wine for NSIS installer (`dist:nsis`).
+> **Windows support** (beta, v0.11.0+):
+> - Cross-compiled from Linux using electron-builder — **no Windows machine needed** to build
+> - `npm run dist:win` produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run
+> - Terminal uses **PowerShell** (detected automatically on Windows)
+> - **Auto-updater** configured — checks for new releases on startup using channel `latest-windows`
+> - Custom title bar and platform-agnostic paths (`app.getPath('userData')` instead of `~/.config`)
+> - Requires Wine only for NSIS installer (`dist:nsis`)
+> - Run `ViStudio.exe` directly from the unpacked folder — no install needed
 
 ### Commands
 
@@ -89,7 +97,12 @@ npm run start        # Launch ViStudio (development)
 - **Settings panel** — Visual editor with Apply/Cancel workflow
 - **Git integration** — Source control panel (status, diff, commit)
 - **File icons** — 133+ SVG icons for file type identification
-- **Windows support** (beta) — Cross-compiled from Linux, runs on Windows 10/11 with PowerShell terminal and auto-updater
+- **Windows support** (beta, v0.11.0+) — Cross-compiled from Linux, runs on Windows 10/11 with:
+  - **PowerShell terminal** — auto-detected on Windows; seamless bash-like experience
+  - **Auto-updater** — checks for new releases via `latest-windows` channel
+  - **Platform-agnostic paths** — `app.getPath('userData')` replaces `~/.config`
+  - **Custom title bar** — consistent look across Linux and Windows
+  - **Portable .exe** — no install, no extra dependencies, run from any folder
 - **GPU acceleration** — Hardware-accelerated rendering with Mesa 26 (Skylake GT2+); GPU blocklist ignored for broad compatibility
 
 ---
@@ -217,9 +230,12 @@ vs.workspace.registerTheme({
 
 The project uses **GitHub Actions** to build and release automatically:
 
-- **Push to `master`** — builds the AppImage and uploads it as a build artifact
-- **Push a tag `v*`** — builds and creates a **GitHub Release** with the AppImage attached
-- **Auto-update** — the app checks for new releases via `electron-updater` and prompts to update
+- **Push to `master`** — builds the AppImage (Linux) and portable .exe (Windows) and uploads them as build artifacts
+- **Push a tag `v*`** — builds both platforms and creates a **GitHub Release** with:
+  - `ViStudio-x86_64.AppImage` — Linux AppImage
+  - `ViStudio-win32-x64.zip` — Windows portable .exe (zipped)
+  - `latest-linux.yml` + `latest-windows.yml` — auto-update metadata
+- **Auto-update** — the app checks for new releases via `electron-updater` (uses `latest-windows.yml` channel on Windows)
 
 To create a release:
 
@@ -268,12 +284,12 @@ vistudio/
 
 ## Debugging
 
-| Source | Location |
-|--------|----------|
-| DevTools | Open automatically in dev mode |
-| Main process logs | `/tmp/vistudio.log` |
-| Extension logs | `~/.config/vistudio/extension-debug.log` |
-| Runtime errors | `~/.config/vistudio/runtime-error.log` |
+| Source | Linux | Windows |
+|--------|-------|---------|
+| DevTools | Open automatically in dev mode | Open automatically in dev mode |
+| Main process logs | `/tmp/vistudio.log` | `%TEMP%\vistudio.log` |
+| Extension logs | `~/.config/vistudio/extension-debug.log` | `%APPDATA%\vistudio\extension-debug.log` |
+| Runtime errors | `~/.config/vistudio/runtime-error.log` | `%APPDATA%\vistudio\runtime-error.log` |
 
 ---
 
