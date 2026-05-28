@@ -18,7 +18,7 @@ Built as part of the [ViTools](https://github.com/regalf/ViTools) suite.
 
 #### Development (from source)
 
-- **Linux** (Arch Linux recommended) or **Windows 10/11** (experimental)
+- **Linux** (Arch Linux recommended) or **Windows 10/11**
 - **Electron 42** (system-installed on Linux: `pacman -S electron`; on Windows Electron is bundled via npm)
 - **Node.js 18+**
 - **npm**
@@ -26,7 +26,7 @@ Built as part of the [ViTools](https://github.com/regalf/ViTools) suite.
 #### Runtime (pre-built)
 
 - **Linux**: AppImage with **FUSE 2** (`libfuse2` on Debian/Ubuntu, `fuse2` on Arch)
-- **Windows 10/11** (beta): Portable `.exe` — no extra dependencies required
+- **Windows 10/11**: Portable `.exe` — no extra dependencies required
 - No Node.js, npm, or Electron required — the executable is self-contained
 
 Install FUSE:
@@ -85,7 +85,7 @@ Output goes to `release/` — standalone executables (no Node.js or npm required
 > npm run dist:nsis    # Build NSIS installer (no Wine needed on Windows)
 > ```
 
-> **Windows support** (beta, v0.11.0+):
+> **Windows support** (v1.0.0+):
 > - Cross-compiled from Linux using electron-builder — **no Windows machine needed** to build
 > - `npm run dist:win` produces `release/win-unpacked/ViStudio.exe` — copy the whole folder to Windows and run
 > - Terminal uses **PowerShell** (detected automatically on Windows)
@@ -118,8 +118,8 @@ npm run start        # Launch ViStudio (development)
 - **Settings panel** — Visual editor with Apply/Cancel workflow
 - **Git integration** — Source control panel (status, diff, commit)
 - **File icons** — 133+ SVG icons for file type identification
-- **Windows support** (beta, v0.11.0+) — Cross-compiled from Linux, runs on Windows 10/11 with:
-  - **PowerShell terminal** — auto-detected on Windows; seamless bash-like experience
+- **Windows support** (v1.0.0+) — Cross-compiled from Linux, runs on Windows 10/11 with:
+  - **PowerShell terminal** — auto-detected on Windows
   - **Auto-updater** — checks for new releases via `latest-windows` channel
   - **Platform-agnostic paths** — `app.getPath('userData')` replaces `~/.config`
   - **Custom title bar** — consistent look across Linux and Windows
