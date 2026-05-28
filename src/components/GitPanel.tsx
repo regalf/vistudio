@@ -240,9 +240,9 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
           style: { fontWeight: 600, fontSize: '13px', color: '#e8e8e8', cursor: 'pointer' }
         }, `🔀 ${branch || 'main'}`),
         React.createElement('div', { key: 'actions', style: { display: 'flex', gap: '4px' } },
-          React.createElement('button', { onClick: handlePull, title: 'Pull', style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 4px', fontSize: '14px', lineHeight: 1 } }, '↓'),
-          React.createElement('button', { onClick: handlePush, title: 'Push', style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 4px', fontSize: '14px', lineHeight: 1 } }, '↑'),
-          React.createElement('button', { onClick: refreshStatus, title: 'Refresh', style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 4px', fontSize: '14px', lineHeight: 1 } }, '🔄')
+          React.createElement('button', { key: 'pull', onClick: handlePull, title: 'Pull', style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 4px', fontSize: '14px', lineHeight: 1 } }, '↓'),
+          React.createElement('button', { key: 'push', onClick: handlePush, title: 'Push', style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 4px', fontSize: '14px', lineHeight: 1 } }, '↑'),
+          React.createElement('button', { key: 'refresh', onClick: refreshStatus, title: 'Refresh', style: { background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px 4px', fontSize: '14px', lineHeight: 1 } }, '🔄')
         )
       ])
     ]),
@@ -304,7 +304,7 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
               style: { background: 'none', border: 'none', color: '#4ec9b0', cursor: 'pointer', fontSize: '11px', padding: 0 }
             }, `Stage Selected ${selectedPaths.size > 0 ? '(' + selectedPaths.size + ')' : ''}`),
             unstagedFiles.length > 0 && React.createElement('button', {
-              onClick: handleStageAll,
+              key: 'stage-all', onClick: handleStageAll,
               style: { background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '11px', padding: 0 }
             }, 'Stage All')
           )
@@ -312,14 +312,14 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
         ...unstagedFiles.map(f => renderFileItem(f, false))
       ]),
       stagedFiles.length === 0 && unstagedFiles.length === 0 && React.createElement('div', {
-        style: { padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '12px' }
+        key: 'no-changes', style: { padding: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '12px' }
       }, 'No changes detected')
     ]),
     React.createElement('div', {
       key: 'commit-area', style: { borderTop: '1px solid var(--border-primary)', padding: '8px 12px' }
     }, [
       React.createElement('textarea', {
-        value: commitMessage, onChange: (e: any) => setCommitMessage(e.target.value),
+        key: 'msg-input', value: commitMessage, onChange: (e: any) => setCommitMessage(e.target.value),
         placeholder: 'Commit message...',
         onKeyDown: (e: any) => { if (e.key === 'Enter' && e.ctrlKey) handleCommit() },
         style: {
@@ -329,10 +329,10 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
         }
       }),
       React.createElement('div', {
-        style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }
+        key: 'commit-actions', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }
       }, [
         React.createElement('button', {
-          onClick: handleCommit, disabled: !commitMessage.trim(),
+          key: 'do-commit', onClick: handleCommit, disabled: !commitMessage.trim(),
           style: {
             padding: '4px 12px', background: commitMessage.trim() ? 'var(--accent)' : 'var(--bg-input)',
             border: 'none', color: commitMessage.trim() ? 'white' : 'var(--text-secondary)',
@@ -340,7 +340,7 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
           }
         }, 'Commit (Ctrl+Enter)'),
         React.createElement('span', {
-          onClick: () => setShowLog(!showLog),
+          key: 'toggle-log', onClick: () => setShowLog(!showLog),
           style: { color: 'var(--accent)', cursor: 'pointer', fontSize: '11px' }
         }, showLog ? 'Hide Log' : 'Show Log')
       ])
@@ -348,7 +348,7 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
     showLog && React.createElement('div', {
       key: 'log', style: { borderTop: '1px solid var(--border-primary)', maxHeight: '150px', overflowY: 'auto', padding: '4px 12px' }
     }, [
-      React.createElement('div', { style: { fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, padding: '4px 0' } }, 'RECENT COMMITS'),
+      React.createElement('div', { key: 'log-header', style: { fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, padding: '4px 0' } }, 'RECENT COMMITS'),
       ...commits.map(c =>
         React.createElement('div', { key: c.hash, style: { padding: '3px 0', fontSize: '11px', borderBottom: '1px solid var(--bg-tertiary)' } }, [
           React.createElement('div', { style: { color: '#4ec9b0', fontFamily: 'monospace' } }, c.hash),
