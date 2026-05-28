@@ -38,6 +38,8 @@ const ProjectExplorer: React.FC<ProjectExplorerProps> = ({ folderPath, refreshPa
   const [dragOverPath, setDragOverPath] = useState<string | null>(null)
   const [gitStatus, setGitStatus] = useState<Map<string, string>>(new Map())
 
+  const normalizePath = (p: string) => p.replace(/\\/g, '/')
+
   const loadGitStatus = useCallback(async (dir: string) => {
     if (!window.electronAPI) return
     try {
@@ -204,7 +206,7 @@ const ProjectExplorer: React.FC<ProjectExplorerProps> = ({ folderPath, refreshPa
           onDragOver: (e: any) => { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move' },
           onDrop: (e: any) => {
             e.preventDefault(); e.stopPropagation(); setDragOverPath(null);
-            const sourcePath = e.dataTransfer.getData('text/plain');
+            const sourcePath = normalizePath(e.dataTransfer.getData('text/plain'));
             if (sourcePath && sourcePath !== node.path) { handleDrop(sourcePath, `${node.path}/${sourcePath.split('/').pop()}`) }
           }
         },
@@ -276,7 +278,7 @@ const ProjectExplorer: React.FC<ProjectExplorerProps> = ({ folderPath, refreshPa
           onDragOver: (e: any) => { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move' },
           onDrop: (e: any) => {
             e.preventDefault(); e.stopPropagation(); setDragOverPath(null);
-            const sourcePath = e.dataTransfer.getData('text/plain');
+            const sourcePath = normalizePath(e.dataTransfer.getData('text/plain'));
             if (sourcePath && folderPath && sourcePath !== folderPath) { handleDrop(sourcePath, `${folderPath}/${sourcePath.split('/').pop()}`) }
           }
         },

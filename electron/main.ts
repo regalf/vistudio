@@ -132,9 +132,11 @@ ipcMain.on('window:maximize', () => mainWindow?.isMaximized() ? mainWindow?.unma
 ipcMain.on('window:close', () => mainWindow?.close())
 
 // IPC Handlers
+const normalize = (p: string) => p.replace(/\\/g, '/')
+
 ipcMain.handle('fs:readFile', async (_, filePath: string) => {
   try {
-    const content = readFileSync(filePath, 'utf-8')
+    const content = readFileSync(normalize(filePath), 'utf-8')
     return { success: true, content }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -143,7 +145,7 @@ ipcMain.handle('fs:readFile', async (_, filePath: string) => {
 
 ipcMain.handle('fs:writeFile', async (_, filePath: string, content: string) => {
   try {
-    writeFileSync(filePath, content, 'utf-8')
+    writeFileSync(normalize(filePath), content, 'utf-8')
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -152,11 +154,11 @@ ipcMain.handle('fs:writeFile', async (_, filePath: string, content: string) => {
 
 ipcMain.handle('fs:readDir', async (_, dirPath: string) => {
   try {
-    const items = readdirSync(dirPath, { withFileTypes: true })
+    const items = readdirSync(normalize(dirPath), { withFileTypes: true })
     const result = items.map(item => ({
       name: item.name,
       isDirectory: item.isDirectory(),
-      path: join(dirPath, item.name)
+      path: normalize(join(normalize(dirPath), item.name))
     }))
     return { success: true, items: result }
   } catch (error: any) {
@@ -166,7 +168,7 @@ ipcMain.handle('fs:readDir', async (_, dirPath: string) => {
 
 ipcMain.handle('fs:stat', async (_, filePath: string) => {
   try {
-    const stats = statSync(filePath)
+    const stats = statSync(normalize(filePath))
     return { success: true, stats: { isDirectory: stats.isDirectory(), size: stats.size, modified: stats.mtime } }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -174,18 +176,20 @@ ipcMain.handle('fs:stat', async (_, filePath: string) => {
 })
 
 ipcMain.handle('fs:exists', async (_, filePath: string) => {
-  return existsSync(filePath)
+  return existsSync(normalize(filePath))
 })
 
 ipcMain.handle('fs:move', async (_, sourcePath: string, destPath: string) => {
   try {
-    if (!existsSync(sourcePath)) {
+    const src = normalize(sourcePath)
+    const dst = normalize(destPath)
+    if (!existsSync(src)) {
       return { success: false, error: 'Source file not found' }
     }
-    if (existsSync(destPath)) {
+    if (existsSync(dst)) {
       return { success: false, error: 'Destination already exists' }
     }
-    renameSync(sourcePath, destPath)
+    renameSync(src, dst)
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
@@ -197,22 +201,22 @@ ipcMain.handle('dialog:openFile', async () => {
     properties: ['openFile'],
     filters: [{ name: 'All Files', extensions: ['*'] }]
   })
-  return result.canceled ? null : result.filePaths[0]
+  return result.canceled ? null : normalize(result.filePaths[0])
 })
 
 ipcMain.handle('dialog:openFolder', async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     properties: ['openDirectory']
   })
-  return result.canceled ? null : result.filePaths[0]
+  return result.canceled ? null : normalize(result.filePaths[0])
 })
 
 ipcMain.handle('dialog:saveFile', async (_, defaultPath?: string) => {
   const result = await dialog.showSaveDialog(mainWindow!, {
-    defaultPath,
+    defaultPath: defaultPath ? normalize(defaultPath) : undefined,
     filters: [{ name: 'All Files', extensions: ['*'] }]
   })
-  return result.canceled ? null : result.filePath
+  return result.canceled ? null : normalize(result.filePath)
 })
 
 ipcMain.handle('dialog:openProject', async () => {
@@ -220,7 +224,7 @@ ipcMain.handle('dialog:openProject', async () => {
     properties: ['openFile'],
     filters: [{ name: 'ViStudio Project', extensions: ['vistproj'] }]
   })
-  return result.canceled ? null : result.filePaths[0]
+  return result.canceled ? null : normalize(result.filePaths[0])
 })
 
 function getCompilerConfig(language?: string): { command: string; args: string[] } {
@@ -235,7 +239,8 @@ ipcMain.handle('project:create', async (_, projectName: string, parentDir: strin
   try {
     if (!projectName) return { success: false, error: 'Project name is required' }
 
-    const projectDir = join(parentDir, projectName)
+    const normalizedParent = normalize(parentDir)
+    const projectDir = join(normalizedParent, projectName)
     if (existsSync(projectDir)) {
       return { success: false, error: `Folder "${projectName}" already exists` }
     }
@@ -282,8 +287,9 @@ ipcMain.handle('project:create', async (_, projectName: string, parentDir: strin
 ipcMain.handle('folder:create', async (_, folderName: string, parentPath?: string) => {
   try {
     if (!folderName) return null
+    const normalizedParent = parentPath ? normalize(parentPath) : undefined
 
-    const targetPath = parentPath || (await dialog.showOpenDialog(mainWindow!, {
+    const targetPath = normalizedParent || (await dialog.showOpenDialog(mainWindow!, {
       properties: ['openDirectory'],
       title: 'Select parent folder'
     })).filePaths[0]
@@ -301,7 +307,7 @@ ipcMain.handle('folder:create', async (_, folderName: string, parentPath?: strin
     }
 
     mkdirSync(newFolderPath, { recursive: true })
-    return newFolderPath
+    return normalize(newFolderPath)
   } catch (error: any) {
     console.error('Failed to create folder:', error)
     return null
@@ -311,7 +317,8 @@ ipcMain.handle('folder:create', async (_, folderName: string, parentPath?: strin
 ipcMain.handle('file:create', async (_, fileName: string, parentPath: string) => {
   try {
     if (!fileName || !parentPath) return null
-    const newFilePath = join(parentPath, fileName)
+    const normalizedParent = normalize(parentPath)
+    const newFilePath = join(normalizedParent, fileName)
     if (existsSync(newFilePath)) {
       await dialog.showMessageBox(mainWindow!, {
         type: 'error',
@@ -321,7 +328,7 @@ ipcMain.handle('file:create', async (_, fileName: string, parentPath: string) =>
       return null
     }
     writeFileSync(newFilePath, '', 'utf-8')
-    return newFilePath
+    return normalize(newFilePath)
   } catch (error: any) {
     console.error('Failed to create file:', error)
     return null
@@ -354,7 +361,7 @@ ipcMain.handle('terminal:start', async (_, cwd: string) => {
     console.log('[TERMINAL] Command:', command, 'Args:', args)
 
     terminalProcess = spawn(command, args, {
-      cwd: cwd || process.env.HOME,
+      cwd: cwd ? normalize(cwd) : (process.platform === 'win32' ? process.env.USERPROFILE : process.env.HOME),
       env: { ...process.env, TERM: 'xterm-256color' },
       stdio: ['pipe', 'pipe', 'pipe']
     })

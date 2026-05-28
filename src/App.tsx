@@ -925,7 +925,7 @@ const App: React.FC = () => {
         setUpdateNotification(null)
         break
       case 'menu:about':
-        alert('ViStudio IDE v0.5.0\nExtensions API loaded!')
+        alert('ViStudio IDE v' + appVersion + '\nExtensions API loaded!')
         break
       case 'menu:settings':
         setSettingsPanelVisible(prev => !prev)
@@ -1481,7 +1481,7 @@ const App: React.FC = () => {
             type: 'text',
             value: projectDirValue,
             onChange: (e: any) => setProjectDirValue(e.target.value),
-            placeholder: '/home/user/projects',
+            placeholder: navigator.platform?.startsWith('Win') ? 'C:\\Users\\username\\projects' : '/home/user/projects',
             style: {
               flex: 1,
               padding: '8px',
