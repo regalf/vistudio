@@ -1214,5 +1214,70 @@ Quando modifichi il codice, verifica:
 
 ---
 
-*Ultimo aggiornamento: 2026-05-26*
-*Versione: 0.9.0 (Settings Panel, UI-Wide Theming, Extension Theme API, ThemeService DI, Error Boundary)*
+## 🪟 Windows Debug & Verify Checklist
+
+Prima di dichiarare Windows stabile, verificare su una macchina Windows **reale** (non cross-compile):
+
+### Build & Avvio
+- [ ] `npm install` senza errori (node-gyp, electron, ecc.)
+- [ ] `npm run build` (tsc + vite) senza errori
+- [ ] `npx electron .` avvia senza crash
+- [ ] `npm run dist:win` produce `release/win-unpacked/ViStudio.exe`
+- [ ] `npm run dist:nsis` produce installer (senza Wine)
+- [ ] `.exe` si avvia senza antivirus false positive
+
+### Path & Filesystem
+- [ ] `app.getPath('userData')` punta a `%APPDATA%\vistudio\`
+- [ ] `/` hardcoded nei path non causano errori (cercare in App.tsx, main.ts: `split('/')`, `join('/')`)
+- [ ] `stat` e `readDir` su path con spazi funzionano
+- [ ] Drag & drop file/folder funziona (path backslash)
+- [ ] Salvataggio file con encoding UTF-8 corretto
+- [ ] New Project crea cartella in `C:\Users\...`
+
+### Terminal (PowerShell)
+- [ ] Terminal si avvia (mostra prompt PowerShell)
+- [ ] `dir`, `cd`, `echo` funzionano
+- [ ] `node --version`, `npm --version` funzionano
+- [ ] `git status` funziona
+- [ ] Resize terminale funziona (FitAddon)
+- [ ] Uscita terminale (exit) gestita senza crash
+- [ ] Unicode/caratteri speciali nel prompt (nessun broken glyph)
+
+### Auto-Update
+- [ ] `latest-windows.yml` è presente nella release
+- [ ] `channel: 'latest-windows'` fa cercare il file corretto
+- [ ] Update notification appare (se update disponibile)
+- [ ] Download update funziona
+- [ ] "Restart & Install" funziona
+
+### Estensioni
+- [ ] Estensioni caricate da `%APPDATA%\vistudio\extensions\`
+- [ ] "Install Recommended Extensions" copia da `extensions/` bundle
+- [ ] Extension API operations (registerCommand, showMessage, ecc.)
+
+### Git Integration
+- [ ] `git status` su repo Windows
+- [ ] `git diff`, `git commit` funzionano
+- [ ] Branch switching funziona
+
+### UI & Theming
+- [ ] Window controls (minimize, maximize, close) funzionano
+- [ ] Title bar custom (dimensione, colore)
+- [ ] CSS variables risolte correttamente (nessun colore mancante)
+- [ ] Tema chiaro/scuro switcha correttamente
+- [ ] WelcomePage si apre (nessun tab aperto)
+- [ ] Recent folders mostra path Windows (`C:\...`)
+
+### Performance
+- [ ] App non consuma CPU in idle
+- [ ] Monaco Editor non crasha su file grandi
+- [ ] Terminale non perde input/output
+- [ ] Memoria stabile dopo uso prolungato
+
+### Regressioni
+- [ ] Tutti i check della Testing Checklist sopra passano anche su Windows
+
+---
+
+*Ultimo aggiornamento: 2026-05-28*
+*Versione: 0.11.0 (Windows beta, WelcomePage, bundled extensions, Install Recommended)*
