@@ -61,7 +61,7 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick }) => {
       if (logRes.success && logRes.commits) setCommits(logRes.commits)
       else setCommits([])
     } catch (e) {
-      console.error('Git refresh error:', e)
+      setStatusMsg('Git error: ' + (e instanceof Error ? e.message : String(e)))
     }
     setSelectedPaths(new Set())
     setLoading(false)

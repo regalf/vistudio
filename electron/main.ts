@@ -658,6 +658,7 @@ function runGitSpawn(dir: string, args: string[]): Promise<{ success: boolean; s
 }
 
 ipcMain.handle('git:status', async (_, dir: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   const r = runGit(dir, ['status', '--porcelain', '-u'])
   if (!r.success) return { ...r, isRepo: true }
@@ -670,6 +671,7 @@ ipcMain.handle('git:status', async (_, dir: string) => {
 })
 
 ipcMain.handle('git:branch', async (_, dir: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   const r = runGit(dir, ['branch', '--show-current'])
   if (!r.success) {
@@ -680,6 +682,7 @@ ipcMain.handle('git:branch', async (_, dir: string) => {
 })
 
 ipcMain.handle('git:log', async (_, dir: string, count: number = 20) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   const r = runGit(dir, ['log', `--max-count=${count}`, '--format=%h|%an|%ar|%s', '--no-color'])
   if (!r.success) return { ...r, isRepo: true }
@@ -691,21 +694,28 @@ ipcMain.handle('git:log', async (_, dir: string, count: number = 20) => {
 })
 
 ipcMain.handle('git:add', async (_, dir: string, filePath: string) => {
+  dir = normalize(dir)
+  filePath = normalize(filePath)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
   return runGit(dir, ['add', filePath])
 })
 
 ipcMain.handle('git:unstage', async (_, dir: string, filePath: string) => {
+  dir = normalize(dir)
+  filePath = normalize(filePath)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
   return runGit(dir, ['reset', 'HEAD', '--', filePath])
 })
 
 ipcMain.handle('git:commit', async (_, dir: string, message: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
   return runGitSpawn(dir, ['commit', '-m', message])
 })
 
 ipcMain.handle('git:diff', async (_, dir: string, filePath?: string) => {
+  dir = normalize(dir)
+  if (filePath) filePath = normalize(filePath)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   const args = ['diff', '--no-color']
   if (filePath) args.push('--', filePath)
@@ -713,6 +723,8 @@ ipcMain.handle('git:diff', async (_, dir: string, filePath?: string) => {
 })
 
 ipcMain.handle('git:diffStaged', async (_, dir: string, filePath?: string) => {
+  dir = normalize(dir)
+  if (filePath) filePath = normalize(filePath)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   const args = ['diff', '--staged', '--no-color']
   if (filePath) args.push('--', filePath)
@@ -720,25 +732,30 @@ ipcMain.handle('git:diffStaged', async (_, dir: string, filePath?: string) => {
 })
 
 ipcMain.handle('git:init', async (_, dir: string) => {
+  dir = normalize(dir)
   return runGit(dir, ['init'])
 })
 
 ipcMain.handle('git:checkout', async (_, dir: string, branch: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
   return runGit(dir, ['checkout', branch])
 })
 
 ipcMain.handle('git:pull', async (_, dir: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
   return runGit(dir, ['pull'])
 })
 
 ipcMain.handle('git:push', async (_, dir: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
   return runGit(dir, ['push'])
 })
 
 ipcMain.handle('git:allBranches', async (_, dir: string) => {
+  dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   return { ...runGit(dir, ['branch', '-a']), isRepo: true }
 })
