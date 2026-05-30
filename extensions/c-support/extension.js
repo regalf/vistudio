@@ -244,6 +244,56 @@ function activate(context, vscode) {
         { label: 'strerror', kind: vscode.CompletionItemKind.Function, insertText: 'strerror', detail: 'string.h - Error string' }
       ]
 
+      // Format specifiers (for printf/scanf inside string literals)
+      var formats = [
+        { label: '%s', kind: vscode.CompletionItemKind.Snippet, insertText: '%s', detail: 'String format specifier' },
+        { label: '%d', kind: vscode.CompletionItemKind.Snippet, insertText: '%d', detail: 'Signed int format specifier' },
+        { label: '%i', kind: vscode.CompletionItemKind.Snippet, insertText: '%i', detail: 'Signed int format specifier' },
+        { label: '%c', kind: vscode.CompletionItemKind.Snippet, insertText: '%c', detail: 'Character format specifier' },
+        { label: '%f', kind: vscode.CompletionItemKind.Snippet, insertText: '%f', detail: 'Float format specifier' },
+        { label: '%lf', kind: vscode.CompletionItemKind.Snippet, insertText: '%lf', detail: 'Double format specifier' },
+        { label: '%p', kind: vscode.CompletionItemKind.Snippet, insertText: '%p', detail: 'Pointer format specifier' },
+        { label: '%x', kind: vscode.CompletionItemKind.Snippet, insertText: '%x', detail: 'Hex format specifier' },
+        { label: '%X', kind: vscode.CompletionItemKind.Snippet, insertText: '%X', detail: 'Hex uppercase format specifier' },
+        { label: '%u', kind: vscode.CompletionItemKind.Snippet, insertText: '%u', detail: 'Unsigned int format specifier' },
+        { label: '%ld', kind: vscode.CompletionItemKind.Snippet, insertText: '%ld', detail: 'Long int format specifier' },
+        { label: '%lu', kind: vscode.CompletionItemKind.Snippet, insertText: '%lu', detail: 'Unsigned long format specifier' },
+        { label: '%lld', kind: vscode.CompletionItemKind.Snippet, insertText: '%lld', detail: 'Long long format specifier' },
+        { label: '%llu', kind: vscode.CompletionItemKind.Snippet, insertText: '%llu', detail: 'Unsigned long long format specifier' },
+        { label: '%zu', kind: vscode.CompletionItemKind.Snippet, insertText: '%zu', detail: 'size_t format specifier' },
+        { label: '%e', kind: vscode.CompletionItemKind.Snippet, insertText: '%e', detail: 'Scientific notation format' },
+        { label: '%g', kind: vscode.CompletionItemKind.Snippet, insertText: '%g', detail: 'Compact float format specifier' },
+        { label: '%o', kind: vscode.CompletionItemKind.Snippet, insertText: '%o', detail: 'Octal format specifier' },
+        { label: '%%', kind: vscode.CompletionItemKind.Snippet, insertText: '%%', detail: 'Percent sign' },
+        { label: '%.*s', kind: vscode.CompletionItemKind.Snippet, insertText: '%.*s', detail: 'Precision string format' },
+        { label: '%02d', kind: vscode.CompletionItemKind.Snippet, insertText: '%02d', detail: 'Zero-padded int format' },
+      ]
+
+      // Escape sequences
+      var escapes = [
+        { label: '\\n', kind: vscode.CompletionItemKind.Snippet, insertText: '\\n', detail: 'Newline escape' },
+        { label: '\\t', kind: vscode.CompletionItemKind.Snippet, insertText: '\\t', detail: 'Tab escape' },
+        { label: '\\0', kind: vscode.CompletionItemKind.Snippet, insertText: '\\0', detail: 'Null terminator escape' },
+        { label: '\\\\', kind: vscode.CompletionItemKind.Snippet, insertText: '\\\\', detail: 'Backslash escape' },
+        { label: '\\"', kind: vscode.CompletionItemKind.Snippet, insertText: '\\"', detail: 'Double quote escape' },
+        { label: '\\r', kind: vscode.CompletionItemKind.Snippet, insertText: '\\r', detail: 'Carriage return escape' },
+        { label: '\\a', kind: vscode.CompletionItemKind.Snippet, insertText: '\\a', detail: 'Alert/bell escape' },
+        { label: '\\b', kind: vscode.CompletionItemKind.Snippet, insertText: '\\b', detail: 'Backspace escape' },
+        { label: '\\v', kind: vscode.CompletionItemKind.Snippet, insertText: '\\v', detail: 'Vertical tab escape' },
+        { label: '\\f', kind: vscode.CompletionItemKind.Snippet, insertText: '\\f', detail: 'Form feed escape' },
+        { label: '\\x', kind: vscode.CompletionItemKind.Snippet, insertText: '\\x', detail: 'Hex byte escape prefix' },
+      ]
+
+      // String pattern snippets (common printf patterns)
+      var stringPatterns = [
+        { label: '"%s\\n"', kind: vscode.CompletionItemKind.Snippet, insertText: '"%s\\n"', detail: 'String with newline pattern' },
+        { label: '"%d\\n"', kind: vscode.CompletionItemKind.Snippet, insertText: '"%d\\n"', detail: 'Int with newline pattern' },
+        { label: '"%s = %d\\n"', kind: vscode.CompletionItemKind.Snippet, insertText: '"%s = %d\\n"', detail: 'Name = value pattern' },
+        { label: '"error: %s\\n"', kind: vscode.CompletionItemKind.Snippet, insertText: '"error: %s\\n"', detail: 'Error message pattern' },
+        { label: '"%c"', kind: vscode.CompletionItemKind.Snippet, insertText: '"%c"', detail: 'Single char pattern' },
+        { label: '"%p\\n"', kind: vscode.CompletionItemKind.Snippet, insertText: '"%p\\n"', detail: 'Pointer pattern' },
+      ]
+
       // math.h functions
       var math = [
         { label: 'sqrt', kind: vscode.CompletionItemKind.Function, insertText: 'sqrt', detail: 'math.h - Square root' },
@@ -265,7 +315,7 @@ function activate(context, vscode) {
       ]
 
       // Add all items
-      var allItems = keywords.concat(types, snippets, stdio, stdlib, string, math)
+      var allItems = keywords.concat(types, snippets, stdio, stdlib, string, formats, escapes, stringPatterns, math)
       var i
       for (i = 0; i < allItems.length; i++) {
         items.push(allItems[i])

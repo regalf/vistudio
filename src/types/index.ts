@@ -18,6 +18,7 @@ export interface EditorTab {
   language: string
   isModified: boolean
   isNew: boolean
+  originalContent?: string
 }
 
 export interface FileSystemItem {
@@ -140,6 +141,7 @@ export interface ElectronAPI {
     add: (dir: string, filePath: string) => Promise<{ success: boolean; error?: string }>
     unstage: (dir: string, filePath: string) => Promise<{ success: boolean; error?: string }>
     commit: (dir: string, message: string) => Promise<{ success: boolean; error?: string }>
+    commitAll: (dir: string, message: string) => Promise<{ success: boolean; error?: string }>
     diff: (dir: string, filePath?: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
     diffStaged: (dir: string, filePath?: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
     init: (dir: string) => Promise<{ success: boolean; error?: string }>
@@ -147,6 +149,33 @@ export interface ElectronAPI {
     pull: (dir: string) => Promise<{ success: boolean; error?: string }>
     push: (dir: string) => Promise<{ success: boolean; error?: string }>
     allBranches: (dir: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
+    clone: (url: string, targetDir: string) => Promise<{ success: boolean; path?: string; error?: string }>
+    branchCreate: (dir: string, branchName: string) => Promise<{ success: boolean; error?: string }>
+    branchDelete: (dir: string, branchName: string) => Promise<{ success: boolean; error?: string }>
+    stash: (dir: string) => Promise<{ success: boolean; error?: string }>
+    stashPop: (dir: string) => Promise<{ success: boolean; error?: string }>
+    logFile: (dir: string, filePath: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
+    restore: (dir: string, filePath: string) => Promise<{ success: boolean; error?: string }>
+    fetch: (dir: string) => Promise<{ success: boolean; error?: string }>
+    pushUpstream: (dir: string, branch: string) => Promise<{ success: boolean; error?: string }>
+    branchDeleteForce: (dir: string, branchName: string) => Promise<{ success: boolean; error?: string }>
+    branchRename: (dir: string, oldName: string, newName: string) => Promise<{ success: boolean; error?: string }>
+    merge: (dir: string, branchName: string) => Promise<{ success: boolean; error?: string }>
+    remoteAdd: (dir: string, name: string, url: string) => Promise<{ success: boolean; error?: string }>
+    remoteList: (dir: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
+    stashList: (dir: string) => Promise<{ success: boolean; stashes?: Array<{ ref: string; message: string }>; error?: string }>
+    stashPush: (dir: string, message?: string) => Promise<{ success: boolean; error?: string }>
+    stashDrop: (dir: string, ref: string) => Promise<{ success: boolean; error?: string }>
+    logHistory: (entry: { operation: string; details?: string; success: boolean; error?: string }) => Promise<{ success: boolean; error?: string }>
+    getHistory: () => Promise<{ success: boolean; history?: Array<{ timestamp: string; operation: string; details?: string; success: boolean; error?: string }>; error?: string }>
+  }
+  github: {
+    authStatus: () => Promise<{ success: boolean; loggedIn: boolean; username?: string; error?: string }>
+    repoView: (dir: string, repoName?: string) => Promise<{ success: boolean; hasRemote?: boolean; repo?: any; error?: string }>
+    repoCreate: (dir: string, name: string, isPublic: boolean, description?: string) => Promise<{ success: boolean; error?: string }>
+    prList: (dir: string, repoName?: string) => Promise<{ success: boolean; pulls?: Array<{ number: number; title: string; state: string; headRefName: string; author: { login: string }; createdAt: string }>; error?: string }>
+    issueList: (dir: string, repoName?: string) => Promise<{ success: boolean; issues?: Array<{ number: number; title: string; state: string; labels: Array<{ name: string; color: string }>; author: { login: string }; createdAt: string }>; error?: string }>
+    browse: (dir: string) => Promise<{ success: boolean; error?: string }>
   }
   update: {
     check: () => Promise<{ success: boolean; error?: string }>

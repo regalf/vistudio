@@ -16,9 +16,11 @@ interface SidebarProps {
   onRefresh: () => void
   activePanel: 'explorer' | 'git'
   onPanelChange: (panel: 'explorer' | 'git') => void
+  onBranchChange?: (branch: string) => void
+  onChangesCountChange?: (count: number) => void
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, width, folderPath, refreshPath, onOpenFolder, onFileClick, onProjectLoad, onNewFile, onNewFolder, onRefreshPathConsumed, onRefresh, activePanel, onPanelChange }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, width, folderPath, refreshPath, onOpenFolder, onFileClick, onProjectLoad, onNewFile, onNewFolder, onRefreshPathConsumed, onRefresh, activePanel, onPanelChange, onBranchChange, onChangesCountChange }) => {
 
   return React.createElement('div', {
     style: {
@@ -81,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, width, folderPath, refreshPat
             style: { padding: '6px 12px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.5px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-primary)' }
           }, 'SOURCE CONTROL'),
           React.createElement('div', { style: { flex: 1, overflowY: 'auto' } },
-            React.createElement(GitPanel, { folderPath, onFileClick })
+            React.createElement(GitPanel, { folderPath, onFileClick, onBranchChange, onChangesCountChange })
           )
         ])
   ])

@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
 import { tokenHighlightRegistry } from '../core/TokenHighlightRegistry'
 import { RegisteredTheme } from '../types'
+import { CompletionProvider } from '../types/extension'
 
 interface EditorPanelProps {
   filePath: string | null
@@ -13,15 +14,17 @@ interface EditorPanelProps {
   settings: Record<string, any>
   themeName: string
   extensionThemes: RegisteredTheme[]
+  getCompletionProviders?: () => Map<string, CompletionProvider[]> | undefined
 }
 
-const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, language, onChange, settings, themeName, extensionThemes }) => {
+const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, language, onChange, settings, themeName, extensionThemes, getCompletionProviders }) => {
   const editorRef = useRef<any>(null)
   const monacoRef = useRef<any>(null)
   const themeDefined = useRef(false)
   const decorationsRef = useRef<string[]>([])
   const mountedRef = useRef(true)
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const completionProvidersRegistered = useRef(false)
 
   useEffect(() => {
     mountedRef.current = true
@@ -298,18 +301,62 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
       highlightWithTimeout()
       return result
     }
+
+    // Register completion providers once (queries dynamically each time)
+    if (!completionProvidersRegistered.current) {
+      completionProvidersRegistered.current = true
+      const extLangIds = new Set(getCompletionProviders?.()?.keys() || [])
+      const knownLangs = ['c', 'cpp', 'python', 'rust', 'java', 'javascript', 'typescript']
+      for (const id of knownLangs) extLangIds.add(id)
+      for (const langId of extLangIds) {
+        monaco.languages.registerCompletionItemProvider(langId, {
+          provideCompletionItems: async (model, position) => {
+            const providers = getCompletionProviders?.()?.get(langId) || []
+            if (providers.length === 0) return { suggestions: [] }
+            const doc = {
+              uri: model.uri.toString(),
+              fileName: model.uri.path.split('/').pop() || '',
+              languageId: model.getLanguageId(),
+              getText: () => model.getValue(),
+              lineCount: model.getLineCount()
+            }
+            const monacoPos = { line: position.lineNumber, column: position.column }
+            const allItems: any[] = []
+            for (const p of providers) {
+              try {
+                const items = p.provideCompletionItems(doc, monacoPos)
+                if (items) {
+                  const resolved = items instanceof Promise ? await items : items
+                  for (const item of resolved) {
+                    allItems.push({
+                      label: item.label,
+                      kind: item.kind,
+                      insertText: item.insertText,
+                      detail: item.detail
+                    })
+                  }
+                }
+              } catch (e) {
+                console.error('[CompletionProvider] Error:', e)
+              }
+            }
+            return { suggestions: allItems }
+          }
+        })
+      }
+    }
   }
 
   return React.createElement('div', {
     style: { flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', overflow: 'hidden' }
   }, [
     React.createElement(Editor, {
-      key: 'editor',
+      key: filePath || fileName || 'untitled',
       height: '100%',
       theme: themeName,
       path: filePath || fileName || 'untitled',
       defaultLanguage: language,
-      value: content,
+      defaultValue: content,
       onChange: (value) => onChange(value || ''),
       beforeMount: handleBeforeMount,
       onMount: handleEditorDidMount,

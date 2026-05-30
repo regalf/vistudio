@@ -12,6 +12,8 @@ import SearchPanel from './components/SearchPanel'
 import SettingsPanel from './components/SettingsPanel'
 import UpdatePanel from './components/UpdatePanel'
 import WelcomePage from './components/WelcomePage'
+import CloneModal from './components/CloneModal'
+import GitHubModal from './components/GitHubModal'
 import './styles/global.css'
 import { EditorTab, EditorSettings, CommandItem } from './types'
 import { ExtensionHost } from './core/ExtensionHost'
@@ -38,11 +40,15 @@ const BUILTIN_COMMANDS: CommandItem[] = [
   { id: 'menu:source-control', label: 'View Source Control', category: 'Git', shortcut: 'Ctrl+Shift+G', type: 'command' },
   { id: 'menu:git-status', label: 'Git Status', category: 'Git', type: 'command' },
   { id: 'menu:git-commit', label: 'Git Commit...', category: 'Git', type: 'command' },
+  { id: 'menu:git-fetch', label: 'Git Fetch', category: 'Git', type: 'command' },
   { id: 'menu:git-pull', label: 'Git Pull', category: 'Git', type: 'command' },
   { id: 'menu:git-push', label: 'Git Push', category: 'Git', type: 'command' },
+  { id: 'menu:git-merge', label: 'Git Merge...', category: 'Git', type: 'command' },
+  { id: 'menu:git-remote-add', label: 'Git Remote Add...', category: 'Git', type: 'command' },
   { id: 'menu:git-init', label: 'Git Init', category: 'Git', type: 'command' },
   { id: 'menu:git-clone', label: 'Git Clone...', category: 'Git', type: 'command' },
   { id: 'menu:debug-test-all', label: 'Run Debug Tests', category: 'Help', shortcut: 'Ctrl+Shift+T', type: 'command' },
+  { id: 'menu:github-dashboard', label: 'GitHub Dashboard...', category: 'GitHub', type: 'command' },
   { id: 'menu:settings', label: 'Settings', category: 'File', shortcut: 'Ctrl+,', type: 'command' },
   { id: 'menu:check-updates', label: 'Check for Updates...', category: 'Help', type: 'command' },
   { id: 'menu:about', label: 'About ViStudio', category: 'Help', type: 'command' },
@@ -130,6 +136,9 @@ const App: React.FC = () => {
   const [updatePanelVisible, setUpdatePanelVisible] = useState(false)
   const [updateNotification, setUpdateNotification] = useState<{ version: string } | null>(null)
   const [recentFolders, setRecentFolders] = useState<string[]>([])
+  const [cloneModalVisible, setCloneModalVisible] = useState(false)
+  const [githubModalVisible, setGitHubModalVisible] = useState(false)
+  const [changesCount, setChangesCount] = useState(0)
   const appVersion = pkg.version
   const extensionHostRef = useRef<ExtensionHost | null>(null)
 
@@ -626,6 +635,22 @@ const App: React.FC = () => {
     })
   }, [unsavedChangesModal, tabs, activeTabId, folderPath, saveTab])
 
+  const handleClone = useCallback(async (url: string, destPath: string) => {
+    if (!window.electronAPI) throw new Error('No electronAPI')
+    const result = await window.electronAPI.git.clone(url, destPath)
+    if (!result.success) throw new Error(result.error || 'Clone failed')
+    if (result.path) {
+      setFolderPath(result.path)
+      setSidebarActivePanel('git')
+      setSidebarOpen(true)
+      setRecentFolders(prev => {
+        const next = [result.path!, ...prev.filter(p => p !== result.path)].slice(0, 10)
+        window.electronAPI?.settings.save({ recentFolders: next }).catch(() => {})
+        return next
+      })
+    }
+  }, [])
+
   const handleOpenFolder = useCallback(async () => {
     try {
       if (window.electronAPI) {
@@ -979,22 +1004,69 @@ const App: React.FC = () => {
       case 'menu:git-pull':
         if (folderPath && window.electronAPI) {
           window.electronAPI.git.pull(folderPath).then(r => {
+            window.electronAPI!.git.logHistory({ operation: 'Pull', success: r.success, error: r.error })
             if (r.success) addLog('info', 'Git pull completed')
             else addLog('error', `Git pull failed: ${r.error}`)
+          })
+        }
+        break
+      case 'menu:git-fetch':
+        if (folderPath && window.electronAPI) {
+          window.electronAPI.git.fetch(folderPath).then(r => {
+            if (r.success) addLog('info', 'Git fetch completed')
+            else addLog('error', `Git fetch failed: ${r.error}`)
           })
         }
         break
       case 'menu:git-push':
         if (folderPath && window.electronAPI) {
           window.electronAPI.git.push(folderPath).then(r => {
-            if (r.success) addLog('info', 'Git push completed')
-            else addLog('error', `Git push failed: ${r.error}`)
+            if (r.success) {
+              window.electronAPI!.git.logHistory({ operation: 'Push', success: true })
+              addLog('info', 'Git push completed')
+            } else {
+              if (r.error && (r.error.includes('no upstream') || r.error.includes('set-upstream'))) {
+                window.electronAPI.git.pushUpstream(folderPath, gitBranch).then(r2 => {
+                  window.electronAPI!.git.logHistory({ operation: 'Push Upstream', success: r2.success, error: r2.error })
+                  if (r2.success) addLog('info', 'Git push completed (upstream set)')
+                  else addLog('error', `Git push failed: ${r2.error}`)
+                })
+              } else {
+                window.electronAPI!.git.logHistory({ operation: 'Push', success: false, error: r.error })
+                addLog('error', `Git push failed: ${r.error}`)
+              }
+            }
           })
         }
+        break
+      case 'menu:git-fetch':
+        if (folderPath && window.electronAPI) {
+          window.electronAPI.git.fetch(folderPath).then(r => {
+            window.electronAPI!.git.logHistory({ operation: 'Fetch', success: r.success, error: r.error })
+            if (r.success) addLog('info', 'Git fetch completed')
+            else addLog('error', `Git fetch failed: ${r.error}`)
+          })
+        }
+        break
+      case 'menu:git-merge':
+        if (folderPath && window.electronAPI) {
+          setSidebarOpen(true)
+          setSidebarActivePanel('git')
+        }
+        break
+      case 'menu:git-remote-add':
+        if (folderPath && window.electronAPI) {
+          setSidebarOpen(true)
+          setSidebarActivePanel('git')
+        }
+        break
+      case 'menu:github-dashboard':
+        setGitHubModalVisible(true)
         break
       case 'menu:git-init':
         if (folderPath && window.electronAPI) {
           window.electronAPI.git.init(folderPath).then(r => {
+            window.electronAPI!.git.logHistory({ operation: 'Init', success: r.success, error: r.error })
             if (r.success) {
               addLog('info', 'Git repository initialized')
               window.electronAPI.git.branch(folderPath).then(b => {
@@ -1005,7 +1077,7 @@ const App: React.FC = () => {
         }
         break
       case 'menu:git-clone':
-        addLog('info', 'Git clone not yet implemented in UI (use terminal)')
+        setCloneModalVisible(true)
         break
     }
   }, [extensionsLoaded, folderPath, addLog])
@@ -1137,7 +1209,9 @@ const App: React.FC = () => {
         onRefreshPathConsumed: () => setRefreshPath(null),
         onRefresh: handleRefreshExplorer,
         activePanel: sidebarActivePanel,
-        onPanelChange: setSidebarActivePanel
+        onPanelChange: setSidebarActivePanel,
+        onBranchChange: setGitBranch,
+        onChangesCountChange: setChangesCount
       }),
       React.createElement('div', {
         key: 'resize-handle',
@@ -1171,7 +1245,8 @@ const App: React.FC = () => {
           onChange: handleEditorChange,
           settings,
           themeName: settings['workbench.colorTheme'],
-          extensionThemes
+          extensionThemes,
+          getCompletionProviders: () => extensionHostRef.current?.getCompletionProviders()
         }) : React.createElement(WelcomePage, {
           key: 'welcome',
           version: appVersion,
@@ -1714,6 +1789,16 @@ const App: React.FC = () => {
         }, 'View Update')
       ])
     ]),
+    cloneModalVisible && React.createElement(CloneModal, {
+      key: 'clone-modal',
+      onClone: handleClone,
+      onClose: () => setCloneModalVisible(false)
+    }),
+    githubModalVisible && React.createElement(GitHubModal, {
+      key: 'github-modal',
+      folderPath: folderPath,
+      onClose: () => setGitHubModalVisible(false)
+    }),
     React.createElement(StatusBar, {
       key: 'statusbar',
       filePath: activeTab?.path || null,
@@ -1722,7 +1807,8 @@ const App: React.FC = () => {
       extensionsLoaded: extensionsLoaded,
       errorCount: consoleLogs.filter(l => l.level === 'error').length,
       onConsoleClick: () => setConsoleVisible(prev => !prev),
-      gitBranch: gitBranch
+      gitBranch: gitBranch,
+      changesCount: changesCount
     })
   ])
 }

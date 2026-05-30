@@ -65,11 +65,15 @@ const menuTemplate: { label: string; items: MenuItem[] }[] = [
       { label: 'Git Status', action: 'menu:git-status' },
       { label: 'Git Commit...', action: 'menu:git-commit' },
       { separator: true },
+      { label: 'Git Fetch', action: 'menu:git-fetch' },
       { label: 'Git Pull', action: 'menu:git-pull' },
       { label: 'Git Push', action: 'menu:git-push' },
       { separator: true },
+      { label: 'Git Merge...', action: 'menu:git-merge' },
       { label: 'Git Init', action: 'menu:git-init' },
-      { label: 'Git Clone...', action: 'menu:git-clone' }
+      { label: 'Git Clone...', action: 'menu:git-clone' },
+      { separator: true },
+      { label: 'Git Remote Add...', action: 'menu:git-remote-add' }
     ]
   },
   {
@@ -81,6 +85,12 @@ const menuTemplate: { label: string; items: MenuItem[] }[] = [
       { label: 'Install Extension...', action: 'menu:install-extension' },
       { separator: true },
       { label: 'Refresh Extensions', action: 'menu:refresh-extensions' }
+    ]
+  },
+  {
+    label: 'GitHub',
+    items: [
+      { label: 'GitHub Dashboard...', action: 'menu:github-dashboard' }
     ]
   },
   {

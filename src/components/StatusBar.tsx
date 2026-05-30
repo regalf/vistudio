@@ -8,9 +8,10 @@ interface StatusBarProps {
   errorCount: number
   onConsoleClick: () => void
   gitBranch?: string
+  changesCount?: number
 }
 
-const StatusBar: React.FC<StatusBarProps> = ({ filePath, language, cursorPosition, extensionsLoaded, errorCount, onConsoleClick, gitBranch }) => {
+const StatusBar: React.FC<StatusBarProps> = ({ filePath, language, cursorPosition, extensionsLoaded, errorCount, onConsoleClick, gitBranch, changesCount }) => {
   return React.createElement('div', {
     style: {
       height: '22px',
@@ -31,7 +32,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ filePath, language, cursorPositio
       gitBranch && React.createElement('span', {
         key: 'branch',
         style: { display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', padding: '0 5px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }
-      }, `🔀 ${gitBranch}`),
+      }, `🔀 ${gitBranch}${changesCount && changesCount > 0 ? ` (${changesCount})` : ''}`),
       React.createElement('span', {
         key: 'extensions',
         style: { display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', padding: '0 5px' }

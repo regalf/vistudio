@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSync, renameSync, rmSync } from 'fs'
-import { spawn, execSync } from 'child_process'
+import { spawn, execFileSync } from 'child_process'
 import { autoUpdater } from 'electron-updater'
 
 // GPU acceleration - Skylake GT2 via Mesa 26
@@ -632,10 +632,10 @@ ipcMain.handle('settings:save', async (_, partial: Record<string, any>) => {
 // Git IPC Handlers
 function runGit(dir: string, args: string[]): { success: boolean; stdout?: string; stderr?: string; error?: string } {
   try {
-    const stdout = execSync(`git ${args.join(' ')}`, { cwd: dir, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 })
-    return { success: true, stdout: stdout.trim() }
+    const stdout = execFileSync('git', args, { cwd: dir, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 })
+    return { success: true, stdout: stdout.trimEnd() }
   } catch (err: any) {
-    return { success: false, stdout: err.stdout?.trim() || '', stderr: err.stderr?.trim() || '', error: err.message }
+    return { success: false, stdout: err.stdout?.trimEnd() || '', stderr: err.stderr?.trimEnd() || '', error: err.message }
   }
 }
 
@@ -647,8 +647,8 @@ function runGitSpawn(dir: string, args: string[]): Promise<{ success: boolean; s
       child.stdout?.on('data', (d: Buffer) => { stdout += d.toString() })
       child.stderr?.on('data', (d: Buffer) => { stderr += d.toString() })
       child.on('close', (code) => {
-        if (code === 0) resolve({ success: true, stdout: stdout.trim() })
-        else resolve({ success: false, stdout: stdout.trim(), stderr: stderr.trim(), error: stderr.trim() })
+        if (code === 0) resolve({ success: true, stdout: stdout.trimEnd() })
+        else resolve({ success: false, stdout: stdout.trimEnd(), stderr: stderr.trimEnd(), error: stderr.trimEnd() || stdout.trimEnd() })
       })
       child.on('error', (err) => resolve({ success: false, error: err.message }))
     } catch (err: any) {
@@ -710,7 +710,15 @@ ipcMain.handle('git:unstage', async (_, dir: string, filePath: string) => {
 ipcMain.handle('git:commit', async (_, dir: string, message: string) => {
   dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
-  return runGitSpawn(dir, ['commit', '-m', message])
+  const result = await runGitSpawn(dir, ['commit', '-m', message])
+  return result
+})
+
+ipcMain.handle('git:commitAll', async (_, dir: string, message: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  const result = await runGitSpawn(dir, ['commit', '-a', '-m', message])
+  return result
 })
 
 ipcMain.handle('git:diff', async (_, dir: string, filePath?: string) => {
@@ -758,6 +766,246 @@ ipcMain.handle('git:allBranches', async (_, dir: string) => {
   dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
   return { ...runGit(dir, ['branch', '-a']), isRepo: true }
+})
+
+ipcMain.handle('git:clone', async (_, url: string, targetDir: string) => {
+  try {
+    const dirName = url.split('/').pop()?.replace('.git', '') || 'repo'
+    const dest = normalize(join(targetDir, dirName))
+    if (existsSync(dest)) return { success: false, error: 'Directory already exists: ' + dest }
+    const result = runGit(targetDir, ['clone', url, dirName])
+    if (result.success) return { success: true, path: dest }
+    return result
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git:branchCreate', async (_, dir: string, branchName: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['checkout', '-b', branchName])
+})
+
+ipcMain.handle('git:branchDelete', async (_, dir: string, branchName: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['branch', '-d', branchName])
+})
+
+ipcMain.handle('git:stash', async (_, dir: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['stash'])
+})
+
+ipcMain.handle('git:stashPop', async (_, dir: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['stash', 'pop'])
+})
+
+ipcMain.handle('git:logFile', async (_, dir: string, filePath: string) => {
+  dir = normalize(dir)
+  filePath = normalize(filePath)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
+  const r = runGit(dir, ['show', 'HEAD:' + filePath])
+  return { ...r, isRepo: true }
+})
+
+ipcMain.handle('git:restore', async (_, dir: string, filePath: string) => {
+  dir = normalize(dir)
+  filePath = normalize(filePath)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['restore', filePath])
+})
+
+ipcMain.handle('git:fetch', async (_, dir: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['fetch', '--prune'])
+})
+
+ipcMain.handle('git:pushUpstream', async (_, dir: string, branch: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['push', '--set-upstream', 'origin', branch])
+})
+
+ipcMain.handle('git:branchDeleteForce', async (_, dir: string, branchName: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['branch', '-D', branchName])
+})
+
+ipcMain.handle('git:branchRename', async (_, dir: string, oldName: string, newName: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['branch', '-m', oldName, newName])
+})
+
+ipcMain.handle('git:merge', async (_, dir: string, branchName: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['merge', branchName])
+})
+
+ipcMain.handle('git:remoteAdd', async (_, dir: string, name: string, url: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['remote', 'add', name, url])
+})
+
+ipcMain.handle('git:remoteList', async (_, dir: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
+  return { ...runGit(dir, ['remote', '-v']), isRepo: true }
+})
+
+ipcMain.handle('git:stashList', async (_, dir: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
+  const r = runGit(dir, ['stash', 'list'])
+  if (!r.success) return { ...r, stashes: [], isRepo: true }
+  const stashes = r.stdout!.split('\n').filter(Boolean).map(line => {
+    const m = line.match(/^(stash@\{[^}]+\}):\s+(.+)$/)
+    return { ref: m ? m[1] : line, message: m ? m[2] : line }
+  })
+  return { success: true, stashes, isRepo: true }
+})
+
+ipcMain.handle('git:stashPush', async (_, dir: string, message?: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  const args = ['stash', 'push']
+  if (message) args.push('-m', message)
+  return runGit(dir, args)
+})
+
+ipcMain.handle('git:stashDrop', async (_, dir: string, ref: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository' }
+  return runGit(dir, ['stash', 'drop', ref])
+})
+
+// GitHub CLI IPC Handlers
+function runGh(args: string[], cwd?: string): { success: boolean; stdout?: string; stderr?: string; error?: string } {
+  try {
+    const stdout = execFileSync('gh', args, { cwd, encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024 })
+    return { success: true, stdout: stdout.trim() }
+  } catch (err: any) {
+    return { success: false, stdout: err.stdout?.trim() || '', stderr: err.stderr?.trim() || '', error: err.message }
+  }
+}
+
+ipcMain.handle('gh:authStatus', async () => {
+  const r = runGh(['auth', 'status'])
+  if (r.success) {
+    const m = r.stdout!.match(/Logged in to github\.com account (\S+)/)
+    return { success: true, loggedIn: true, username: m ? m[1] : 'unknown' }
+  }
+  return { success: true, loggedIn: false, username: '' }
+})
+
+ipcMain.handle('gh:repoView', async (_, dir: string, repoName?: string) => {
+  dir = normalize(dir)
+  if (!repoName) {
+    const remoteR = runGit(dir, ['remote', 'get-url', 'origin'])
+    if (!remoteR.success) return { success: false, error: 'No remote origin found', hasRemote: false }
+    const url = remoteR.stdout!
+    const m = url.match(/(?:github\.com[/: ])([\w.-]+)\/([\w.-]+?)(?:\.git)?$/)
+    if (!m) return { success: false, error: 'Remote is not a GitHub URL', hasRemote: false }
+    repoName = `${m[1]}/${m[2]}`
+  }
+  const r = runGh(['repo', 'view', repoName, '--json', 'name,description,url,stargazerCount,forkCount,primaryLanguage,isPrivate,updatedAt,owner'], dir)
+  if (!r.success) return { success: false, error: r.stderr || r.error, hasRemote: true }
+  try {
+    const data = JSON.parse(r.stdout!)
+    return { success: true, hasRemote: true, repo: data }
+  } catch {
+    return { success: false, error: 'Failed to parse repo info', hasRemote: true }
+  }
+})
+
+ipcMain.handle('gh:repoCreate', async (_, dir: string, name: string, isPublic: boolean, description?: string) => {
+  dir = normalize(dir)
+  const args = ['repo', 'create', name, '--source=.', '--remote=origin', '--push']
+  if (isPublic) args.push('--public')
+  else args.push('--private')
+  if (description) args.push('--description', description)
+  return runGh(args, dir)
+})
+
+ipcMain.handle('gh:prList', async (_, dir: string, repoName?: string) => {
+  dir = normalize(dir)
+  if (!repoName) {
+    const remoteR = runGit(dir, ['remote', 'get-url', 'origin'])
+    if (!remoteR.success) return { success: false, error: 'No remote origin found' }
+    const url = remoteR.stdout!
+    const m = url.match(/(?:github\.com[/: ])([\w.-]+)\/([\w.-]+?)(?:\.git)?$/)
+    if (!m) return { success: false, error: 'Remote is not a GitHub URL' }
+    repoName = `${m[1]}/${m[2]}`
+  }
+  const r = runGh(['pr', 'list', '--repo', repoName, '--json', 'number,title,state,headRefName,author,createdAt', '--limit', '10'], dir)
+  if (!r.success) return { success: false, error: r.stderr || r.error }
+  try {
+    return { success: true, pulls: JSON.parse(r.stdout!) }
+  } catch {
+    return { success: false, error: 'Failed to parse PR list' }
+  }
+})
+
+ipcMain.handle('gh:issueList', async (_, dir: string, repoName?: string) => {
+  dir = normalize(dir)
+  if (!repoName) {
+    const remoteR = runGit(dir, ['remote', 'get-url', 'origin'])
+    if (!remoteR.success) return { success: false, error: 'No remote origin found' }
+    const url = remoteR.stdout!
+    const m = url.match(/(?:github\.com[/: ])([\w.-]+)\/([\w.-]+?)(?:\.git)?$/)
+    if (!m) return { success: false, error: 'Remote is not a GitHub URL' }
+    repoName = `${m[1]}/${m[2]}`
+  }
+  const r = runGh(['issue', 'list', '--repo', repoName, '--json', 'number,title,state,labels,author,createdAt', '--limit', '10'], dir)
+  if (!r.success) return { success: false, error: r.stderr || r.error }
+  try {
+    return { success: true, issues: JSON.parse(r.stdout!) }
+  } catch {
+    return { success: false, error: 'Failed to parse issue list' }
+  }
+})
+
+ipcMain.handle('gh:browse', async (_, dir: string) => {
+  dir = normalize(dir)
+  return runGh(['repo', 'view', '--web'], dir)
+})
+
+// Git operation history
+const HISTORY_FILE = join(app.getPath('userData'), 'git-history.json')
+const MAX_HISTORY = 100
+
+ipcMain.handle('git:logHistory', async (_, entry: { operation: string; details?: string; success: boolean; error?: string }) => {
+  try {
+    let history: any[] = []
+    if (existsSync(HISTORY_FILE)) {
+      try { history = JSON.parse(readFileSync(HISTORY_FILE, 'utf-8')) } catch {}
+    }
+    history.unshift({ ...entry, timestamp: new Date().toISOString() })
+    if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY)
+    writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2), 'utf-8')
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git:getHistory', async () => {
+  try {
+    if (!existsSync(HISTORY_FILE)) return { success: true, history: [] }
+    const data = readFileSync(HISTORY_FILE, 'utf-8')
+    return { success: true, history: JSON.parse(data) }
+  } catch (err: any) {
+    return { success: false, error: err.message }
+  }
 })
 
 // Auto-updater configuration
