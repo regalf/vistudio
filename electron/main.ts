@@ -79,12 +79,14 @@ function createMenu() {
 }
 
 function createWindow() {
+  const iconPath = join(app.getAppPath(), 'public/icons/logo.svg')
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 800,
     minHeight: 600,
     title: 'ViStudio',
+    icon: iconPath,
     frame: false,
     autoHideMenuBar: true,
     backgroundColor: '#1e1e1e',

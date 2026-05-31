@@ -50,6 +50,7 @@
     "extraMetadata": {
       "main": "dist-electron/main.js"
     },
+    "icon": "public/icons/logo-512.png",
     "nodeGypRebuild": false,
     "npmRebuild": false,
     "publish": {
