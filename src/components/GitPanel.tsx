@@ -86,6 +86,7 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick, onBranchCh
         console.log('[GIT STATUS RAW]', JSON.stringify(statusRes.files.map((f: any) => ({ p: f.path, s: f.staged, w: f.working }))))
         setFiles(statusRes.files)
         onChangesCountChange?.(statusRes.files.length)
+        logGitOp('Status', true, `${statusRes.files.length} change(s)`)
       }
       else { setFiles([]); onChangesCountChange?.(0); console.log('[GIT STATUS RAW] empty') }
       setIsRepo(statusRes.isRepo || false)

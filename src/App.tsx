@@ -14,6 +14,7 @@ import UpdatePanel from './components/UpdatePanel'
 import WelcomePage from './components/WelcomePage'
 import CloneModal from './components/CloneModal'
 import GitHubModal from './components/GitHubModal'
+import GitStatusModal from './components/GitStatusModal'
 import './styles/global.css'
 import { EditorTab, EditorSettings, CommandItem } from './types'
 import { ExtensionHost } from './core/ExtensionHost'
@@ -138,6 +139,7 @@ const App: React.FC = () => {
   const [recentFolders, setRecentFolders] = useState<string[]>([])
   const [cloneModalVisible, setCloneModalVisible] = useState(false)
   const [githubModalVisible, setGitHubModalVisible] = useState(false)
+  const [gitStatusModalVisible, setGitStatusModalVisible] = useState(false)
   const [changesCount, setChangesCount] = useState(0)
   const appVersion = pkg.version
   const extensionHostRef = useRef<ExtensionHost | null>(null)
@@ -990,9 +992,8 @@ const App: React.FC = () => {
         setSidebarActivePanel(prev => prev === 'git' ? 'explorer' : 'git')
         break
       case 'menu:git-status':
-        if (folderPath && window.electronAPI) {
-          setSidebarOpen(true)
-          setSidebarActivePanel('git')
+        if (folderPath) {
+          setGitStatusModalVisible(true)
         }
         break
       case 'menu:git-commit':
@@ -1798,6 +1799,11 @@ const App: React.FC = () => {
       key: 'github-modal',
       folderPath: folderPath,
       onClose: () => setGitHubModalVisible(false)
+    }),
+    gitStatusModalVisible && React.createElement(GitStatusModal, {
+      key: 'git-status-modal',
+      folderPath: folderPath,
+      onClose: () => setGitStatusModalVisible(false)
     }),
     React.createElement(StatusBar, {
       key: 'statusbar',

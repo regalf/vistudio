@@ -76,6 +76,7 @@ try {
   },
   git: {
     status: (dir: string) => ipcRenderer.invoke('git:status', dir),
+    statusVerbose: (dir: string) => ipcRenderer.invoke('git:statusVerbose', dir),
     branch: (dir: string) => ipcRenderer.invoke('git:branch', dir),
     log: (dir: string, count?: number) => ipcRenderer.invoke('git:log', dir, count),
     add: (dir: string, filePath: string) => ipcRenderer.invoke('git:add', dir, filePath),

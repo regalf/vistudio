@@ -670,6 +670,13 @@ ipcMain.handle('git:status', async (_, dir: string) => {
   return { success: true, files, isRepo: true }
 })
 
+ipcMain.handle('git:statusVerbose', async (_, dir: string) => {
+  dir = normalize(dir)
+  if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }
+  const r = runGit(dir, ['status'])
+  return r
+})
+
 ipcMain.handle('git:branch', async (_, dir: string) => {
   dir = normalize(dir)
   if (!existsSync(join(dir, '.git'))) return { success: false, error: 'Not a git repository', isRepo: false }

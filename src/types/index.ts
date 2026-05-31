@@ -136,6 +136,7 @@ export interface ElectronAPI {
   }
   git: {
     status: (dir: string) => Promise<{ success: boolean; files?: Array<{ path: string; staged: string; working: string }>; isRepo?: boolean; error?: string }>
+    statusVerbose: (dir: string) => Promise<{ success: boolean; stdout?: string; isRepo?: boolean; error?: string }>
     branch: (dir: string) => Promise<{ success: boolean; branch?: string; isRepo?: boolean; error?: string }>
     log: (dir: string, count?: number) => Promise<{ success: boolean; commits?: Array<{ hash: string; author: string; date: string; message: string }>; isRepo?: boolean; error?: string }>
     add: (dir: string, filePath: string) => Promise<{ success: boolean; error?: string }>
