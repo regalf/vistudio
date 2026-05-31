@@ -83,12 +83,11 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick, onBranchCh
         window.electronAPI.git.log(folderPath, 10)
       ])
       if (statusRes.success && statusRes.files) {
-        console.log('[GIT STATUS RAW]', JSON.stringify(statusRes.files.map((f: any) => ({ p: f.path, s: f.staged, w: f.working }))))
         setFiles(statusRes.files)
         onChangesCountChange?.(statusRes.files.length)
         logGitOp('Status', true, `${statusRes.files.length} change(s)`)
       }
-      else { setFiles([]); onChangesCountChange?.(0); console.log('[GIT STATUS RAW] empty') }
+      else { setFiles([]); onChangesCountChange?.(0) }
       setIsRepo(statusRes.isRepo || false)
       if (branchRes.success && branchRes.branch) {
         setBranch(branchRes.branch)
@@ -144,11 +143,9 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick, onBranchCh
     if (!folderPath || !window.electronAPI || !commitMessage.trim()) return
     const msg = commitMessage.trim()
     const statusRes = await window.electronAPI.git.status(folderPath)
-    console.log('[GIT DEBUG] fresh status:', statusRes)
     const currentFiles = statusRes.success && statusRes.files ? statusRes.files : []
     const hasStaged = currentFiles.some((f: any) => f.staged && f.staged !== '?')
     const hasUnstaged = currentFiles.some((f: any) => (f.working && f.working !== '?') || f.staged === '?')
-    console.log('[GIT DEBUG] hasStaged:', hasStaged, 'hasUnstaged:', hasUnstaged)
     if (!hasStaged && !hasUnstaged) {
       setStatusMsg('Nothing to commit')
       return
@@ -157,7 +154,6 @@ const GitPanel: React.FC<GitPanelProps> = ({ folderPath, onFileClick, onBranchCh
     const r = useAuto
       ? await window.electronAPI.git.commitAll(folderPath, msg)
       : await window.electronAPI.git.commit(folderPath, msg)
-    console.log('[GIT DEBUG] commit result:', r)
     if (r.success) {
       logGitOp('Commit', true, msg)
       setCommitMessage('')
