@@ -15,6 +15,7 @@ import WelcomePage from './components/WelcomePage'
 import CloneModal from './components/CloneModal'
 import GitHubModal from './components/GitHubModal'
 import GitStatusModal from './components/GitStatusModal'
+import AboutModal from './components/AboutModal'
 import './styles/global.css'
 import { EditorTab, EditorSettings, CommandItem } from './types'
 import { ExtensionHost } from './core/ExtensionHost'
@@ -140,6 +141,7 @@ const App: React.FC = () => {
   const [cloneModalVisible, setCloneModalVisible] = useState(false)
   const [githubModalVisible, setGitHubModalVisible] = useState(false)
   const [gitStatusModalVisible, setGitStatusModalVisible] = useState(false)
+  const [aboutModalVisible, setAboutModalVisible] = useState(false)
   const [changesCount, setChangesCount] = useState(0)
   const appVersion = pkg.version
   const extensionHostRef = useRef<ExtensionHost | null>(null)
@@ -952,7 +954,7 @@ const App: React.FC = () => {
         setUpdateNotification(null)
         break
       case 'menu:about':
-        alert('ViStudio IDE v' + appVersion + '\nExtensions API loaded!')
+        setAboutModalVisible(true)
         break
       case 'menu:settings':
         setSettingsPanelVisible(prev => !prev)
@@ -1804,6 +1806,11 @@ const App: React.FC = () => {
       key: 'git-status-modal',
       folderPath: folderPath,
       onClose: () => setGitStatusModalVisible(false)
+    }),
+    aboutModalVisible && React.createElement(AboutModal, {
+      key: 'about-modal',
+      version: appVersion,
+      onClose: () => setAboutModalVisible(false)
     }),
     React.createElement(StatusBar, {
       key: 'statusbar',
