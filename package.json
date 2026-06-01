@@ -5,6 +5,7 @@
   "main": "dist-electron/main.js",
   "author": {
     "name": "regalf",
+    "email": "maintainer.regalf@gmail.com",
     "url": "https://github.com/regalf"
   },
   "license": "GPL-3.0-only",
