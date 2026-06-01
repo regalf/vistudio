@@ -92,7 +92,7 @@
         "nsis",
         "dir"
       ],
-      "icon": "public/icons/logo-512.png",
+      "icon": "public/icons/logo.ico",
       "signAndEditExecutable": false
     },
     "nsis": {
