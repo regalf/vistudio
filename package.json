@@ -72,9 +72,11 @@
       ],
       "category": "Development",
       "desktop": {
-        "Name": "ViStudio",
-        "Comment": "A modern, extensible code editor",
-        "Categories": "Development;IDE;"
+        "entry": {
+          "Name": "ViStudio",
+          "Comment": "A modern, extensible code editor",
+          "Categories": "Development;IDE;"
+        }
       }
     },
     "deb": {
