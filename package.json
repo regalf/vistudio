@@ -31,9 +31,13 @@
     "typecheck": "tsc --noEmit",
     "dist": "npm run build && electron-builder",
     "dist:dir": "npm run build && electron-builder --dir",
+    "dist:linux": "npm run build && electron-builder --linux deb rpm AppImage tar.gz",
+    "dist:deb": "npm run build && electron-builder --linux deb",
+    "dist:rpm": "npm run build && electron-builder --linux rpm",
     "dist:appimage": "npm run build && electron-builder --linux AppImage",
-    "dist:win": "npm run build && electron-builder --win dir",
-    "dist:nsis": "npm run build && electron-builder --win nsis"
+    "dist:win": "npm run build && electron-builder --win portable nsis",
+    "dist:nsis": "npm run build && electron-builder --win nsis",
+    "dist:mac": "npm run build && electron-builder --mac dmg"
   },
   "build": {
     "appId": "com.regalf.vistudio",
@@ -62,9 +66,22 @@
     "linux": {
       "target": [
         "AppImage",
-        "dir"
+        "deb",
+        "rpm",
+        "tar.gz"
       ],
-      "category": "Development"
+      "category": "Development",
+      "desktop": {
+        "Name": "ViStudio",
+        "Comment": "A modern, extensible code editor",
+        "Categories": "Development;IDE;"
+      }
+    },
+    "deb": {
+      "depends": ["libc6", "libgl1-mesa-glx", "libxss1", "libnss3"]
+    },
+    "rpm": {
+      "depends": ["glibc", "mesa-libGL", "libXScrnSaver", "nss"]
     },
     "win": {
       "target": [
@@ -72,7 +89,20 @@
         "nsis",
         "dir"
       ],
+      "icon": "public/icons/logo-512.png",
       "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/icons/logo-512.png",
+      "uninstallerIcon": "public/icons/logo-512.png",
+      "installerHeaderIcon": "public/icons/logo-512.png",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ViStudio"
     },
     "mac": {
       "target": "dir"

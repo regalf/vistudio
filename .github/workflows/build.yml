@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag per nuovi rilasci (es. v0.11.0)'
+        description: 'Release tag per nuovi rilasci (es. v1.1.0)'
         required: false
       silent:
         description: "Silent update — sostituisce gli asset dell'ultima release"
@@ -47,23 +47,31 @@ jobs:
           node-version: 18
           cache: 'npm'
 
+      - name: Install system deps for deb/rpm
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dpkg-dev fakeroot rpm
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
         run: npm run build
 
-      - name: Build Linux AppImage
-        run: npx electron-builder --linux AppImage --publish never
+      - name: Build Linux targets (AppImage, deb, rpm, tar.gz)
+        run: npx electron-builder --linux AppImage deb rpm tar.gz --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Linux artifact
+      - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: vistudio-linux
           path: |
             release/*.AppImage
+            release/*.deb
+            release/*.rpm
+            release/*.tar.gz
             release/latest-linux.yml
           retention-days: 30
 
@@ -81,20 +89,27 @@ jobs:
           node-version: 18
           cache: 'npm'
 
+      - name: Install wine for Windows cross-build
+        run: sudo apt-get install -y -qq wine64
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
         run: npm run build
 
-      - name: Build Windows portable
-        run: npx electron-builder --win portable --publish never
+      - name: Build Windows portable + NSIS installer
+        run: npx electron-builder --win portable nsis --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate latest-windows.yml (auto-update metadata)
         run: |
-          EXE=$(ls release/*.exe | head -1)
+          EXE=$(ls release/*.exe 2>/dev/null | head -1)
+          if [[ -z "$EXE" ]]; then
+            echo "No .exe found, skipping metadata"
+            exit 0
+          fi
           echo "Generating metadata for: $EXE"
           SHA512=$(openssl dgst -sha512 -binary "$EXE" | base64 -w0)
           SIZE=$(stat -c%s "$EXE")
@@ -110,14 +125,14 @@ jobs:
             echo "releaseDate: $(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
           } > release/latest-windows.yml
           cat release/latest-windows.yml
-          cat release/latest-windows.yml
 
-      - name: Upload Windows artifact
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: vistudio-windows
           path: |
             release/*.exe
+            release/*.exe.blockmap
             release/latest-*.yml
           retention-days: 30
 
@@ -172,14 +187,16 @@ jobs:
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --generate-notes
           fi
 
-          echo "Uploading AppImage..."
-          find . -name '*.AppImage' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
+          echo "Uploading Linux artifacts..."
+          find . \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.tar.gz' \) \
+            -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
 
-          echo "Uploading Windows exe..."
+          echo "Uploading Windows artifacts..."
           find . -name '*.exe' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
 
-          echo "Uploading latest*.yml (auto-update metadata)..."
-          find . -name 'latest*.yml' -not -name 'builder-debug*' -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
+          echo "Uploading auto-update metadata..."
+          find . -name 'latest*.yml' -not -name 'builder-debug*' \
+            -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
 
           echo "Done"
         env:
