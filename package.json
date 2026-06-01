@@ -100,9 +100,9 @@
       "perMachine": true,
       "allowElevation": true,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "public/icons/logo-512.png",
-      "uninstallerIcon": "public/icons/logo-512.png",
-      "installerHeaderIcon": "public/icons/logo-512.png",
+      "installerIcon": "public/icons/logo.ico",
+      "uninstallerIcon": "public/icons/logo.ico",
+      "installerHeaderIcon": "public/icons/logo.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "ViStudio"
