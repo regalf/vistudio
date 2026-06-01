@@ -24,7 +24,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ onClose, version }) => {
         style: { padding: '28px 24px 20px', textAlign: 'center' }
       }, [
         React.createElement('img', {
-          src: '/icons/logo.svg',
+          src: './icons/logo.svg',
           style: { width: '64px', height: '64px', marginBottom: '12px', display: 'inline-block' }
         }),
         React.createElement('h2', {
