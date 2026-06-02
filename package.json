@@ -101,8 +101,7 @@
         "nsis",
         "dir"
       ],
-      "icon": "public/icons/logo.ico",
-      "signAndEditExecutable": false
+      "icon": "public/icons/logo.ico"
     },
     "nsis": {
       "oneClick": false,
