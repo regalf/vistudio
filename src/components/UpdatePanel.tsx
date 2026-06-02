@@ -101,6 +101,19 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
         }
       })
     }
+
+    // Auto-check for updates when opening the modal
+    const timer = setTimeout(() => {
+      setStatus('checking')
+      setErrorMsg('')
+      setErrorUrl('')
+      setUpdateInfo(null)
+      setProgress(null)
+      window.electronAPI?.update.check().catch(() => {})
+    }, 100)
+    return () => {
+      clearTimeout(timer)
+    }
   }, [])
 
   const handleCheck = useCallback(async () => {
