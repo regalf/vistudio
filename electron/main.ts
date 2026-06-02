@@ -1053,6 +1053,9 @@ const LINUX_PKG = detectLinuxPackage()
 
 // Detect if auto-update is possible based on install type
 function canSelfUpdate(): { supported: boolean; reason?: string; url?: string } {
+  if (!app.isPackaged) {
+    return { supported: false, reason: 'You are running from source, developer! Just pull the latest changes to update :)', url: 'https://github.com/regalf/vistudio/releases' }
+  }
   if (process.platform === 'win32') {
     return { supported: true }
   }
