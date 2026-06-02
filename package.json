@@ -32,10 +32,11 @@
     "typecheck": "tsc --noEmit",
     "dist": "npm run build && electron-builder",
     "dist:dir": "npm run build && electron-builder --dir",
-    "dist:linux": "npm run build && electron-builder --linux deb rpm AppImage tar.gz",
+    "dist:linux": "npm run build && electron-builder --linux AppImage deb rpm tar.gz flatpak",
     "dist:deb": "npm run build && electron-builder --linux deb",
     "dist:rpm": "npm run build && electron-builder --linux rpm",
     "dist:appimage": "npm run build && electron-builder --linux AppImage",
+    "dist:flatpak": "npm run build && electron-builder --linux flatpak",
     "dist:win": "npm run build && electron-builder --win portable nsis",
     "dist:nsis": "npm run build && electron-builder --win nsis",
     "dist:mac": "npm run build && electron-builder --mac dmg"
