@@ -83,12 +83,11 @@
       }
     },
     "flatpak": {
-      "appId": "com.regalf.vistudio",
       "branch": "stable",
       "runtime": "org.freedesktop.Platform",
       "runtimeVersion": "23.08",
       "sdk": "org.freedesktop.Sdk",
-      "useWayland": true
+      "useWaylandFlags": true
     },
     "deb": {
       "depends": ["libc6", "libgl1-mesa-glx", "libxss1", "libnss3"]
