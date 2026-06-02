@@ -47,10 +47,10 @@ jobs:
           node-version: 18
           cache: 'npm'
 
-      - name: Install system deps for deb/rpm
+      - name: Install system deps for deb/rpm/flatpak
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq dpkg-dev fakeroot rpm
+          sudo apt-get install -y -qq dpkg-dev fakeroot rpm flatpak flatpak-builder
 
       - name: Install dependencies
         run: npm ci
@@ -58,8 +58,8 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Build Linux targets (AppImage, deb, rpm, tar.gz)
-        run: npx electron-builder --linux AppImage deb rpm tar.gz --publish never
+      - name: Build Linux targets (AppImage, deb, rpm, tar.gz, flatpak)
+        run: npx electron-builder --linux AppImage deb rpm tar.gz flatpak --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -72,6 +72,7 @@ jobs:
             release/*.deb
             release/*.rpm
             release/*.tar.gz
+            release/*.flatpak
             release/latest-linux.yml
           retention-days: 30
 
@@ -191,7 +192,7 @@ jobs:
           fi
 
           echo "Uploading Linux artifacts..."
-          find . \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.tar.gz' \) \
+          find . \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.tar.gz' -o -name '*.flatpak' \) \
             -exec gh release upload "$TAG" {} --clobber --repo "$GITHUB_REPOSITORY" \;
 
           echo "Uploading Windows artifacts..."
