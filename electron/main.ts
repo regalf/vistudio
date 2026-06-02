@@ -1,7 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import { join } from 'path'
-import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSync, renameSync, rmSync } from 'fs'
-import { spawn, execFileSync } from 'child_process'
+import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSync, renameSync, rmSync, createWriteStream } from 'fs'
+import { spawn, execFileSync, execFile } from 'child_process'
+import https from 'https'
 import { autoUpdater } from 'electron-updater'
 
 // GPU acceleration - Skylake GT2 via Mesa 26
@@ -1023,24 +1024,143 @@ ipcMain.handle('git:getHistory', async () => {
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
 
+// ── Linux package detection ──────────────────────────────────────────
+
+type LinuxPackageType = 'deb' | 'rpm' | 'appimage' | 'unknown'
+
+interface LinuxPackageInfo {
+  type: LinuxPackageType
+  ext: string
+  label: string
+  installCmd: string
+}
+
+function detectLinuxPackage(): LinuxPackageInfo | null {
+  if (process.platform !== 'linux') return null
+  if (process.env.APPIMAGE) {
+    return { type: 'appimage', ext: 'AppImage', label: 'AppImage', installCmd: '' }
+  }
+  if (existsSync('/etc/debian_version')) {
+    return { type: 'deb', ext: 'deb', label: 'Debian/Ubuntu (.deb)', installCmd: 'dpkg -i' }
+  }
+  if (existsSync('/etc/fedora-release') || existsSync('/etc/redhat-release') || existsSync('/etc/rocky-release')) {
+    return { type: 'rpm', ext: 'rpm', label: 'Fedora/RHEL (.rpm)', installCmd: 'rpm -Uvh' }
+  }
+  return null
+}
+
+const LINUX_PKG = detectLinuxPackage()
+
 // Detect if auto-update is possible based on install type
 function canSelfUpdate(): { supported: boolean; reason?: string } {
   if (process.platform === 'win32') {
-    // NSIS installer handles elevation via UAC
     return { supported: true }
   }
   if (process.platform === 'darwin') {
     return { supported: true }
   }
-  // Linux: only AppImage supports self-update (writable location)
-  if (process.env.APPIMAGE) {
+  if (LINUX_PKG) {
     return { supported: true }
   }
-  // deb/rpm/flatpak/tar.gz in system dirs — cannot self-replace
-  return { supported: false, reason: 'System installation detected. Use your package manager to update.' }
+  return { supported: false, reason: 'System installation detected (Arch/other). Use your package manager to update.' }
 }
 
 const UPDATE_INFO = canSelfUpdate()
+
+// ── GitHub release asset helpers ─────────────────────────────────────
+
+function getAssetFilename(version: string): string {
+  if (LINUX_PKG) {
+    switch (LINUX_PKG.type) {
+      case 'deb': return `vistudio_${version}_amd64.deb`
+      case 'rpm': return `vistudio-${version}.x86_64.rpm`
+      case 'appimage': return `ViStudio-${version}.AppImage`
+    }
+  }
+  // fallback: AppImage
+  return `ViStudio-${version}.AppImage`
+}
+
+function getAssetUrl(version: string): string {
+  const base = 'https://github.com/regalf/vistudio/releases/download'
+  const tag = `v${version}`
+  const file = getAssetFilename(version)
+  return `${base}/${tag}/${file}`
+}
+
+// ── Download asset with progress ─────────────────────────────────────
+
+function downloadAsset(url: string, dest: string, onProgress?: (pct: number) => void): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const file = createWriteStream(dest)
+    https.get(url, (res) => {
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        file.close()
+        rmSync(dest, { force: true })
+        downloadAsset(res.headers.location, dest, onProgress).then(resolve, reject)
+        return
+      }
+      if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+        file.close()
+        rmSync(dest, { force: true })
+        reject(new Error(`Download failed: HTTP ${res.statusCode}`))
+        return
+      }
+      const total = parseInt(res.headers['content-length'] || '0', 10)
+      let downloaded = 0
+      res.on('data', (chunk: Buffer) => {
+        downloaded += chunk.length
+        if (total && onProgress) {
+          onProgress(Math.round((downloaded / total) * 100))
+        }
+      })
+      res.pipe(file)
+      file.on('finish', () => {
+        file.close()
+        resolve(dest)
+      })
+    }).on('error', (err) => {
+      file.close()
+      rmSync(dest, { force: true })
+      reject(err)
+    })
+  })
+}
+
+// ── Linux install via pkexec ─────────────────────────────────────────
+
+function installLinuxPackage(pkgPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (!LINUX_PKG) {
+      reject(new Error('No Linux package info'))
+      return
+    }
+    let args: string[]
+    switch (LINUX_PKG.type) {
+      case 'deb':
+        args = ['dpkg', '-i', pkgPath]
+        break
+      case 'rpm':
+        args = ['rpm', '-Uvh', pkgPath]
+        break
+      default:
+        reject(new Error('Install not supported for ' + LINUX_PKG.type))
+        return
+    }
+    const bin = existsSync('/usr/bin/pkexec') ? 'pkexec' : 'sudo'
+    console.log('[UPDATE] Installing with', bin, args.join(' '))
+    const proc = execFile(bin, args, { timeout: 120000 }, (err, _stdout, stderr) => {
+      if (err) {
+        console.error('[UPDATE] Install failed:', stderr)
+        reject(new Error(stderr || err.message))
+      } else {
+        resolve()
+      }
+    })
+    proc.stdout?.on('data', (d) => console.log('[UPDATE:install]', d.toString().trim()))
+    proc.stderr?.on('data', (d) => console.log('[UPDATE:install:err]', d.toString().trim()))
+  })
+}
 
 const updaterChannel = process.platform === 'win32' ? 'latest-windows' : undefined
 autoUpdater.setFeedURL({
@@ -1120,6 +1240,22 @@ ipcMain.handle('update:download', async () => {
     if (!UPDATE_INFO.supported) {
       return { success: false, error: UPDATE_INFO.reason || 'Self-update not supported.' }
     }
+    // Linux system packages (deb/rpm): download direct from GitHub
+    if (LINUX_PKG && LINUX_PKG.type !== 'appimage') {
+      const version = app.getVersion()
+      const url = getAssetUrl(version)
+      const dest = join(app.getPath('temp'), getAssetFilename(version))
+      console.log('[UPDATE] Downloading:', url)
+      mainWindow?.webContents.send('update:download-progress', { percent: 0, bytesPerSecond: 0, total: 0, transferred: 0 })
+      await downloadAsset(url, dest, (pct) => {
+        mainWindow?.webContents.send('update:download-progress', { percent: pct, bytesPerSecond: 0, total: 0, transferred: 0 })
+      })
+      console.log('[UPDATE] Downloaded to:', dest)
+      _pendingUpdatePath = dest
+      mainWindow?.webContents.send('update:downloaded')
+      return { success: true }
+    }
+    // Windows / AppImage: use electron-updater
     autoUpdater.downloadUpdate()
     return { success: true }
   } catch (error: any) {
@@ -1136,8 +1272,33 @@ ipcMain.handle('update:cancel', async () => {
   }
 })
 
+let _pendingUpdatePath = ''
+
+ipcMain.handle('update:install-type', async () => {
+  if (LINUX_PKG) {
+    return { type: 'linux', pkg: LINUX_PKG.label, needsElevation: LINUX_PKG.type !== 'appimage' }
+  }
+  if (process.platform === 'win32') {
+    return { type: 'win32', pkg: 'NSIS installer', needsElevation: false }
+  }
+  return { type: 'appimage', pkg: 'AppImage', needsElevation: false }
+})
+
 ipcMain.handle('update:install', async () => {
   try {
+    // Linux system package: install via pkexec
+    if (LINUX_PKG && LINUX_PKG.type !== 'appimage') {
+      if (!_pendingUpdatePath || !existsSync(_pendingUpdatePath)) {
+        return { success: false, error: 'Update package not found. Please download again.' }
+      }
+      await installLinuxPackage(_pendingUpdatePath)
+      rmSync(_pendingUpdatePath, { force: true })
+      _pendingUpdatePath = ''
+      app.relaunch()
+      app.quit()
+      return { success: true }
+    }
+    // NSIS / AppImage: use electron-updater
     setImmediate(() => autoUpdater.quitAndInstall())
     return { success: true }
   } catch (error: any) {

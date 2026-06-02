@@ -183,6 +183,7 @@ export interface ElectronAPI {
     download: () => Promise<{ success: boolean; error?: string }>
     cancel: () => Promise<{ success: boolean; error?: string }>
     install: () => Promise<{ success: boolean; error?: string }>
+    installType: () => Promise<{ type: string; pkg: string; needsElevation: boolean }>
     onAvailable: (callback: (info: any) => void) => void
     onNotAvailable: (callback: () => void) => void
     onDownloadProgress: (callback: (progress: any) => void) => void

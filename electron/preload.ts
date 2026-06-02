@@ -123,6 +123,7 @@ try {
     download: () => ipcRenderer.invoke('update:download'),
     cancel: () => ipcRenderer.invoke('update:cancel'),
     install: () => ipcRenderer.invoke('update:install'),
+    installType: () => ipcRenderer.invoke('update:install-type'),
     onAvailable: (callback: (info: any) => void) => {
       ipcRenderer.on('update:available', (_, info) => callback(info))
     },

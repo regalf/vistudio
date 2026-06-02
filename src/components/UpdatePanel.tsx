@@ -33,6 +33,7 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [currentVersion, setCurrentVersion] = useState('—')
+  const [installType, setInstallType] = useState<{ type: string; pkg: string; needsElevation: boolean } | null>(null)
   const checkNotifOn = settings['update.checkOnStartup'] !== false
   const mountedRef = useRef(true)
 
@@ -43,6 +44,12 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
   useEffect(() => {
     window.electronAPI?.getVersion().then(v => {
       if (mountedRef.current) setCurrentVersion(v)
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    window.electronAPI?.update.installType().then(t => {
+      if (mountedRef.current) setInstallType(t)
     }).catch(() => {})
   }, [])
 
@@ -188,6 +195,10 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
           key: 'date',
           style: { color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }
         }, 'Released: ' + new Date(updateInfo.releaseDate).toLocaleDateString()),
+        installType && React.createElement('p', {
+          key: 'pkg',
+          style: { color: 'var(--text-secondary)', fontSize: '12px', marginBottom: '8px' }
+        }, 'Package: ' + installType.pkg),
         React.createElement('button', {
           key: 'download-btn',
           onClick: handleDownload,
@@ -242,6 +253,27 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
           key: 'msg',
           style: { color: 'var(--text-primary)', fontSize: '13px', marginBottom: '8px', fontWeight: 'bold' }
         }, 'Update downloaded!'),
+        installType?.needsElevation && React.createElement('div', {
+          key: 'elevation-warning',
+          style: {
+            background: 'rgba(255, 193, 7, 0.15)',
+            border: '1px solid rgba(255, 193, 7, 0.4)',
+            borderRadius: '4px',
+            padding: '10px',
+            marginBottom: '10px',
+            fontSize: '12px',
+            color: 'var(--text-primary)'
+          }
+        }, [
+          React.createElement('p', {
+            key: 'warn-title',
+            style: { margin: '0 0 4px 0', fontWeight: 'bold', color: '#ffc107' }
+          }, 'Administrative privileges required'),
+          React.createElement('p', {
+            key: 'warn-text',
+            style: { margin: '0', color: 'var(--text-secondary)' }
+          }, 'The update will be installed using pkexec. You will be prompted for your administrator password.')
+        ]),
         React.createElement('button', {
           key: 'install-btn',
           onClick: handleInstall,
