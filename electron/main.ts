@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
 import { join } from 'path'
 import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, mkdirSync, renameSync, rmSync, createWriteStream } from 'fs'
 import { spawn, execFileSync, execFile } from 'child_process'
@@ -1052,7 +1052,7 @@ function detectLinuxPackage(): LinuxPackageInfo | null {
 const LINUX_PKG = detectLinuxPackage()
 
 // Detect if auto-update is possible based on install type
-function canSelfUpdate(): { supported: boolean; reason?: string } {
+function canSelfUpdate(): { supported: boolean; reason?: string; url?: string } {
   if (process.platform === 'win32') {
     return { supported: true }
   }
@@ -1062,7 +1062,14 @@ function canSelfUpdate(): { supported: boolean; reason?: string } {
   if (LINUX_PKG) {
     return { supported: true }
   }
-  return { supported: false, reason: 'System installation detected (Arch/other). Use your package manager to update.' }
+  const releasesUrl = 'https://github.com/regalf/vistudio/releases'
+  if (process.env.FLATPAK_ID) {
+    return { supported: false, reason: 'Flatpak installation detected. Update via Flatpak:', url: 'flatpak update' }
+  }
+  if (existsSync('/etc/arch-release')) {
+    return { supported: false, reason: 'Arch Linux detected. Auto-update is disabled. Get the latest version from GitHub Releases or your AUR helper:', url: releasesUrl }
+  }
+  return { supported: false, reason: 'Auto-update not supported for this installation. Get the latest version from GitHub Releases:', url: releasesUrl }
 }
 
 const UPDATE_INFO = canSelfUpdate()
@@ -1225,10 +1232,22 @@ async function checkForUpdatesWithTimeout(): Promise<void> {
 ipcMain.handle('update:check', async () => {
   try {
     if (!UPDATE_INFO.supported) {
-      mainWindow?.webContents.send('update:error', UPDATE_INFO.reason || 'Self-update not supported for this installation type.')
+      mainWindow?.webContents.send('update:error', {
+        message: UPDATE_INFO.reason || 'Self-update not supported for this installation type.',
+        url: UPDATE_INFO.url
+      })
       return { success: true }
     }
     await checkForUpdatesWithTimeout()
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+})
+
+ipcMain.handle('util:openExternal', async (_, url: string) => {
+  try {
+    await shell.openExternal(url)
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }

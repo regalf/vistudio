@@ -136,9 +136,12 @@ try {
     onDownloaded: (callback: () => void) => {
       ipcRenderer.on('update:downloaded', () => callback())
     },
-    onError: (callback: (msg: string) => void) => {
+    onError: (callback: (msg: { message: string; url?: string }) => void) => {
       ipcRenderer.on('update:error', (_, msg) => callback(msg))
     }
+  },
+  util: {
+    openExternal: (url: string) => ipcRenderer.invoke('util:openExternal', url)
   }
   })
 } catch (error) {

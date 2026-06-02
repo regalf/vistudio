@@ -32,6 +32,7 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [errorUrl, setErrorUrl] = useState('')
   const [currentVersion, setCurrentVersion] = useState('—')
   const [installType, setInstallType] = useState<{ type: string; pkg: string; needsElevation: boolean } | null>(null)
   const checkNotifOn = settings['update.checkOnStartup'] !== false
@@ -91,10 +92,13 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
 
     const onError = window.electronAPI?.update.onError
     if (onError) {
-      onError((msg: string) => {
+      onError((msg: { message: string; url?: string }) => {
         if (!mountedRef.current) return
         setStatus('error')
-        setErrorMsg(msg)
+        setErrorMsg(typeof msg === 'string' ? msg : msg.message)
+        if (typeof msg !== 'string' && msg.url) {
+          setErrorUrl(msg.url)
+        }
       })
     }
   }, [])
@@ -102,6 +106,7 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
   const handleCheck = useCallback(async () => {
     setStatus('checking')
     setErrorMsg('')
+    setErrorUrl('')
     setUpdateInfo(null)
     setProgress(null)
     try {
@@ -142,6 +147,12 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
       await window.electronAPI?.update.install()
     } catch (_) {}
   }, [])
+
+  const handleVisitReleases = useCallback(() => {
+    if (errorUrl) {
+      window.electronAPI?.util?.openExternal(errorUrl)
+    }
+  }, [errorUrl])
 
   const toggleNotify = useCallback(() => {
     onSettingChange('update.checkOnStartup', !checkNotifOn)
@@ -299,6 +310,11 @@ export default function UpdatePanel({ onClose, settings, onSettingChange }: Upda
           key: 'msg',
           style: { color: 'var(--danger)', fontSize: '13px', marginBottom: '8px' }
         }, errorMsg || 'An error occurred'),
+        errorUrl && React.createElement('button', {
+          key: 'releases-btn',
+          onClick: handleVisitReleases,
+          style: { ...btnStyle, marginBottom: '8px' }
+        }, 'Visit Releases Page'),
         React.createElement('button', {
           key: 'retry',
           onClick: handleCheck,
