@@ -25,8 +25,15 @@ Built as part of the [ViTools](https://github.com/regalf/ViTools) suite.
 
 #### Runtime (pre-built)
 
-- **Linux**: AppImage with **FUSE 2** (`libfuse2` on Debian/Ubuntu, `fuse2` on Arch)
-- **Windows 10/11**: Portable `.exe` — no extra dependencies required
+- **Linux**:
+  - **AppImage**: `ViStudio-*.AppImage` — requires FUSE 2 (`libfuse2` on Debian/Ubuntu, `fuse2` on Arch)
+  - **deb**: `vistudio_*_amd64.deb` — Debian/Ubuntu and derivatives
+  - **rpm**: `vistudio-*.x86_64.rpm` — Fedora/RHEL and derivatives
+  - **Flatpak**: `ViStudio-*-x86_64.flatpak` — universal Linux package
+  - **tar.gz**: `vistudio-*.tar.gz` — portable archive, no install needed
+- **Windows 10/11**:
+  - **Portable `.exe`**: standalone, no install required
+  - **NSIS Installer**: `ViStudio Setup *.exe` — per-user or per-machine installation
 - No Node.js, npm, or Electron required — the executable is self-contained
 
 Install FUSE:
@@ -68,11 +75,15 @@ Launches a Vite dev server on port 5173 and opens Electron with hot-reload.
 ### Build Executable
 
 ```bash
-npm run dist         # Package into AppImage + directory (Linux)
-npm run dist:dir     # Package into directory only (faster)
-npm run dist:appimage # AppImage only
-npm run dist:win     # Windows portable .exe (cross-compile from Linux)
-npm run dist:nsis    # Windows NSIS installer (requires Wine)
+npm run dist              # Package into all targets
+npm run dist:dir          # Package into directory only (faster)
+npm run dist:linux        # All Linux targets (AppImage + deb + rpm + tar.gz + flatpak)
+npm run dist:deb          # deb only
+npm run dist:rpm          # rpm only
+npm run dist:appimage     # AppImage only
+npm run dist:flatpak      # Flatpak only
+npm run dist:win          # Windows portable .exe (cross-compile from Linux)
+npm run dist:nsis         # Windows NSIS installer (requires Wine)
 ```
 
 Output goes to `release/` — standalone executables (no Node.js or npm required).
@@ -251,10 +262,15 @@ vs.workspace.registerTheme({
 
 The project uses **GitHub Actions** to build and release automatically:
 
-- **Push to `master`** — builds the AppImage (Linux) and portable .exe (Windows) and uploads them as build artifacts
-- **Push a tag `v*`** — builds both platforms and creates a **GitHub Release** with:
-  - `ViStudio-x86_64.AppImage` — Linux AppImage
-  - `ViStudio-win32-x64.zip` — Windows portable .exe (zipped)
+- **Push to `master`** — builds all Linux targets (AppImage, deb, rpm, tar.gz, flatpak) and Windows targets (portable, NSIS installer), uploaded as build artifacts
+- **Push a tag `v*`** — builds all platforms and creates a **GitHub Release** with:
+  - `ViStudio-*.AppImage` — Linux AppImage
+  - `vistudio_*_amd64.deb` — Debian/Ubuntu package
+  - `vistudio-*.x86_64.rpm` — Fedora/RHEL package
+  - `vistudio-*.tar.gz` — Linux portable archive
+  - `ViStudio-*-x86_64.flatpak` — Flatpak package
+  - `ViStudio Setup *.exe` — Windows NSIS installer
+  - `ViStudio *.exe` — Windows portable executable
   - `latest-linux.yml` + `latest-windows.yml` — auto-update metadata
 - **Auto-update** — the app checks for new releases via `electron-updater` (uses `latest-windows.yml` channel on Windows)
 
