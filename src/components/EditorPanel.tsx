@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
 import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
 import { tokenHighlightRegistry } from '../core/TokenHighlightRegistry'
 import { RegisteredTheme } from '../types'
 import { CompletionProvider } from '../types/extension'
+import MarkdownPreview from './MarkdownPreview'
 
 interface EditorPanelProps {
   filePath: string | null
@@ -25,6 +26,13 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
   const mountedRef = useRef(true)
   const timeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const completionProvidersRegistered = useRef(false)
+
+  const isMarkdown = useMemo(() => {
+    const name = fileName || filePath || ''
+    return name.endsWith('.md') || name.endsWith('.mdx') || name.endsWith('.markdown')
+  }, [fileName, filePath])
+
+  const [showPreview, setShowPreview] = useState(false)
 
   useEffect(() => {
     mountedRef.current = true
@@ -350,48 +358,91 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
   return React.createElement('div', {
     style: { flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)', overflow: 'hidden' }
   }, [
-    React.createElement(Editor, {
-      key: filePath || fileName || 'untitled',
-      height: '100%',
-      theme: themeName,
-      path: filePath || fileName || 'untitled',
-      defaultLanguage: language,
-      defaultValue: content,
-      onChange: (value) => onChange(value || ''),
-      beforeMount: handleBeforeMount,
-      onMount: handleEditorDidMount,
-      options: {
-        minimap: { enabled: settings['editor.minimap'] },
-        fontSize: settings['editor.fontSize'],
-        fontFamily: settings['editor.fontFamily'],
-        fontLigatures: settings['editor.fontLigatures'],
-        automaticLayout: true,
-        scrollBeyondLastLine: settings['editor.scrollBeyondLastLine'],
-        smoothScrolling: settings['editor.smoothScrolling'],
-        cursorBlinking: settings['editor.cursorBlinking'] as any,
-        cursorSmoothCaretAnimation: 'on',
-        renderWhitespace: settings['editor.renderWhitespace'] as any,
-        bracketPairColorization: { enabled: settings['editor.bracketPairColorization'] },
-        guides: { bracketPairs: settings['editor.bracketPairGuides'], indentation: settings['editor.indentationGuides'] },
-        tabSize: settings['editor.tabSize'],
-        wordWrap: settings['editor.wordWrap'] as any,
-        lineNumbers: settings['editor.lineNumbers'] as any,
-        renderLineHighlight: 'all',
-        scrollbar: {
-          verticalScrollbarSize: 10,
-          horizontalScrollbarSize: 10
-        },
-        parameterHints: { enabled: true },
-        suggest: {
-          showKeywords: true,
-          showSnippets: true,
-          showClasses: true,
-          showFunctions: true,
-          showVariables: true,
-          showModules: true
-        }
+    isMarkdown && React.createElement('div', {
+      key: 'preview-bar',
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: '2px 12px',
+        background: 'var(--bg-secondary)',
+        borderBottom: '1px solid var(--border-primary)'
       }
-    })
+    }, [
+      React.createElement('button', {
+        key: 'toggle',
+        onClick: () => setShowPreview(!showPreview),
+        style: {
+          padding: '3px 12px',
+          fontSize: '12px',
+          background: showPreview ? 'var(--accent)' : 'var(--bg-input)',
+          color: 'var(--text-button)',
+          border: 'none',
+          borderRadius: '3px',
+          cursor: 'pointer'
+        }
+      }, showPreview && isMarkdown ? 'Editor' : 'Preview')
+    ]),
+    React.createElement('div', {
+      key: 'editor-area',
+      style: {
+        flex: 1,
+        display: 'flex',
+        overflow: 'hidden'
+      }
+    }, [
+      (!showPreview || !isMarkdown) && React.createElement('div', {
+        key: 'editor-wrapper',
+        style: { flex: 1, overflow: 'hidden' }
+      }, React.createElement(Editor, {
+        key: filePath || fileName || 'untitled',
+        height: '100%',
+        theme: themeName,
+        path: filePath || fileName || 'untitled',
+        defaultLanguage: language,
+        defaultValue: content,
+        onChange: (value) => onChange(value || ''),
+        beforeMount: handleBeforeMount,
+        onMount: handleEditorDidMount,
+        options: {
+          minimap: { enabled: settings['editor.minimap'] },
+          fontSize: settings['editor.fontSize'],
+          fontFamily: settings['editor.fontFamily'],
+          fontLigatures: settings['editor.fontLigatures'],
+          automaticLayout: true,
+          scrollBeyondLastLine: settings['editor.scrollBeyondLastLine'],
+          smoothScrolling: settings['editor.smoothScrolling'],
+          cursorBlinking: settings['editor.cursorBlinking'] as any,
+          cursorSmoothCaretAnimation: 'on',
+          renderWhitespace: settings['editor.renderWhitespace'] as any,
+          bracketPairColorization: { enabled: settings['editor.bracketPairColorization'] },
+          guides: { bracketPairs: settings['editor.bracketPairGuides'], indentation: settings['editor.indentationGuides'] },
+          tabSize: settings['editor.tabSize'],
+          wordWrap: settings['editor.wordWrap'] as any,
+          lineNumbers: settings['editor.lineNumbers'] as any,
+          renderLineHighlight: 'all',
+          scrollbar: {
+            verticalScrollbarSize: 10,
+            horizontalScrollbarSize: 10
+          },
+          parameterHints: { enabled: true },
+          suggest: {
+            showKeywords: true,
+            showSnippets: true,
+            showClasses: true,
+            showFunctions: true,
+            showVariables: true,
+            showModules: true
+          }
+        }
+      })),
+      showPreview && isMarkdown && React.createElement('div', {
+        key: 'preview-wrapper',
+        style: { flex: 1, overflow: 'hidden', borderLeft: !showPreview ? undefined : '1px solid var(--border-primary)' }
+      }, React.createElement(MarkdownPreview, {
+        content: content
+      }))
+    ])
   ])
 }
 
