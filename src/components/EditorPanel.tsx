@@ -32,7 +32,25 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
     return name.endsWith('.md') || name.endsWith('.mdx') || name.endsWith('.markdown')
   }, [fileName, filePath])
 
-  const [showPreview, setShowPreview] = useState(false)
+  type PreviewMode = 'editor' | 'preview' | 'split'
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('editor')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setPreviewMode('editor')
+    setShowDropdown(false)
+  }, [filePath, fileName])
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
@@ -366,22 +384,72 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
         justifyContent: 'flex-end',
         padding: '2px 12px',
         background: 'var(--bg-secondary)',
-        borderBottom: '1px solid var(--border-primary)'
+        borderBottom: '1px solid var(--border-primary)',
+        position: 'relative'
       }
     }, [
-      React.createElement('button', {
-        key: 'toggle',
-        onClick: () => setShowPreview(!showPreview),
-        style: {
-          padding: '3px 12px',
-          fontSize: '12px',
-          background: showPreview ? 'var(--accent)' : 'var(--bg-input)',
-          color: 'var(--text-button)',
-          border: 'none',
-          borderRadius: '3px',
-          cursor: 'pointer'
-        }
-      }, showPreview && isMarkdown ? 'Editor' : 'Preview')
+      React.createElement('div', {
+        key: 'dropdown-wrapper',
+        ref: dropdownRef,
+        style: { position: 'relative' }
+      }, [
+        React.createElement('button', {
+          key: 'toggle',
+          onClick: () => setShowDropdown(!showDropdown),
+          style: {
+            padding: '3px 12px',
+            fontSize: '12px',
+            background: 'var(--accent)',
+            color: 'var(--text-button)',
+            border: 'none',
+            borderRadius: '3px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }
+        }, [
+          'View: ',
+          previewMode === 'editor' ? 'Editor' : previewMode === 'preview' ? 'Preview' : 'Split',
+          React.createElement('span', {
+            key: 'arrow',
+            style: { fontSize: '8px', marginLeft: '2px' }
+          }, '\u25BC')
+        ]),
+        showDropdown && React.createElement('div', {
+          key: 'menu',
+          style: {
+            position: 'absolute',
+            top: '100%',
+            right: '0',
+            marginTop: '2px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: '4px',
+            zIndex: 100,
+            minWidth: '110px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          }
+        }, [
+          ['editor', 'Editor'], ['split', 'Split View'], ['preview', 'Preview']
+        ].map(([mode, label]) =>
+          React.createElement('div', {
+            key: mode,
+            onClick: () => {
+              setPreviewMode(mode as PreviewMode)
+              setShowDropdown(false)
+            },
+            style: {
+              padding: '6px 12px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              color: previewMode === mode ? 'var(--accent)' : 'var(--text-primary)',
+              background: previewMode === mode ? 'var(--bg-active)' : 'transparent'
+            }
+          }, label)
+        ))
+      ])
     ]),
     React.createElement('div', {
       key: 'editor-area',
@@ -391,9 +459,15 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
         overflow: 'hidden'
       }
     }, [
-      (!showPreview || !isMarkdown) && React.createElement('div', {
+      React.createElement('div', {
         key: 'editor-wrapper',
-        style: { flex: 1, overflow: 'hidden' }
+        style: {
+          flex: 1,
+          overflow: 'hidden',
+          display: previewMode === 'preview' ? 'none' : undefined,
+          minWidth: 0,
+          width: previewMode === 'split' ? '50%' : undefined
+        }
       }, React.createElement(Editor, {
         key: filePath || fileName || 'untitled',
         height: '100%',
@@ -436,9 +510,16 @@ const EditorPanel: React.FC<EditorPanelProps> = ({ filePath, fileName, content, 
           }
         }
       })),
-      showPreview && isMarkdown && React.createElement('div', {
+      React.createElement('div', {
         key: 'preview-wrapper',
-        style: { flex: 1, overflow: 'hidden', borderLeft: !showPreview ? undefined : '1px solid var(--border-primary)' }
+        style: {
+          flex: 1,
+          overflow: 'hidden',
+          display: previewMode === 'editor' ? 'none' : undefined,
+          minWidth: 0,
+          width: previewMode === 'split' ? '50%' : undefined,
+          borderLeft: previewMode === 'split' ? '1px solid var(--border-primary)' : undefined
+        }
       }, React.createElement(MarkdownPreview, {
         content: content
       }))
