@@ -118,9 +118,10 @@ jobs:
 
       - name: Generate latest-windows.yml (auto-update metadata)
         run: |
-          EXE=$(ls release/*.exe 2>/dev/null | head -1)
+          # Use only the NSIS installer for auto-update (not the portable exe)
+          EXE=$(ls release/*Setup*.exe 2>/dev/null | head -1)
           if [[ -z "$EXE" ]]; then
-            echo "No .exe found, skipping metadata"
+            echo "No NSIS installer found, skipping metadata"
             exit 0
           fi
           echo "Generating metadata for: $EXE"

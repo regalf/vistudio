@@ -1022,6 +1022,26 @@ ipcMain.handle('git:getHistory', async () => {
 // Auto-updater configuration
 autoUpdater.autoDownload = false
 autoUpdater.autoInstallOnAppQuit = true
+
+// Detect if auto-update is possible based on install type
+function canSelfUpdate(): { supported: boolean; reason?: string } {
+  if (process.platform === 'win32') {
+    // NSIS installer handles elevation via UAC
+    return { supported: true }
+  }
+  if (process.platform === 'darwin') {
+    return { supported: true }
+  }
+  // Linux: only AppImage supports self-update (writable location)
+  if (process.env.APPIMAGE) {
+    return { supported: true }
+  }
+  // deb/rpm/flatpak/tar.gz in system dirs — cannot self-replace
+  return { supported: false, reason: 'System installation detected. Use your package manager to update.' }
+}
+
+const UPDATE_INFO = canSelfUpdate()
+
 const updaterChannel = process.platform === 'win32' ? 'latest-windows' : undefined
 autoUpdater.setFeedURL({
   provider: 'github',
@@ -1084,6 +1104,10 @@ async function checkForUpdatesWithTimeout(): Promise<void> {
 
 ipcMain.handle('update:check', async () => {
   try {
+    if (!UPDATE_INFO.supported) {
+      mainWindow?.webContents.send('update:error', UPDATE_INFO.reason || 'Self-update not supported for this installation type.')
+      return { success: true }
+    }
     await checkForUpdatesWithTimeout()
     return { success: true }
   } catch (error: any) {
@@ -1093,6 +1117,9 @@ ipcMain.handle('update:check', async () => {
 
 ipcMain.handle('update:download', async () => {
   try {
+    if (!UPDATE_INFO.supported) {
+      return { success: false, error: UPDATE_INFO.reason || 'Self-update not supported.' }
+    }
     autoUpdater.downloadUpdate()
     return { success: true }
   } catch (error: any) {
@@ -1125,6 +1152,7 @@ app.whenReady().then(() => {
 
   // Check for updates after a short delay (honours setting)
   setTimeout(() => {
+    if (!UPDATE_INFO.supported) return
     try {
       if (existsSync(SETTINGS_PATH)) {
         const content = readFileSync(SETTINGS_PATH, 'utf-8')
