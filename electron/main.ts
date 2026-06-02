@@ -79,7 +79,9 @@ function createMenu() {
 }
 
 function createWindow() {
-  const iconPath = join(app.getAppPath(), 'public/icons/logo.svg')
+  const isWin = process.platform === 'win32'
+  const iconFile = isWin ? 'logo.ico' : 'logo-512.png'
+  const iconPath = join(app.getAppPath(), 'public/icons', iconFile)
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
