@@ -1,0 +1,49 @@
+{
+  "name": "markdown-support",
+  "version": "1.0.0",
+  "description": "Full Markdown language support with syntax highlighting, snippets, and preview commands",
+  "author": "ViStudio Team",
+  "main": "extension.js",
+  "activationEvents": ["*"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "markdown",
+        "extensions": [".md", ".mdx", ".markdown"],
+        "aliases": ["Markdown"]
+      }
+    ],
+    "commands": [
+      {
+        "command": "markdown.preview",
+        "title": "Markdown: Toggle Preview",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown.tableFormat",
+        "title": "Markdown: Format Table",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown.toggleBold",
+        "title": "Markdown: Toggle Bold",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown.toggleItalic",
+        "title": "Markdown: Toggle Italic",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown.toggleCode",
+        "title": "Markdown: Toggle Inline Code",
+        "category": "Markdown"
+      },
+      {
+        "command": "markdown.toggleStrikethrough",
+        "title": "Markdown: Toggle Strikethrough",
+        "category": "Markdown"
+      }
+    ]
+  }
+}
