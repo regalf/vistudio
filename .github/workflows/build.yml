@@ -51,8 +51,15 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq dpkg-dev fakeroot rpm flatpak flatpak-builder
-          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          sudo flatpak install -y --noninteractive flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+
+      - name: Debug flatpak setup
+        run: |
+          flatpak --version
+          flatpak list --runtime
+          echo "---"
+          ls -la release/linux-unpacked/ 2>/dev/null || echo "Not yet built"
 
       - name: Install dependencies
         run: npm ci
