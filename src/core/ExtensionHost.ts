@@ -77,8 +77,12 @@ export class ExtensionHost {
       const id = manifest.name
 
       if (this.extensions.has(id)) {
-        console.warn(`Extension ${id} is already loaded`)
-        return this.extensions.get(id) || null
+        console.warn(`Extension ${id} is already loaded — reloading from disk`)
+        const existing = this.extensions.get(id)!
+        if (existing.isActive) {
+          await this.deactivateExtension(id)
+        }
+        this.extensions.delete(id)
       }
 
       const extensionInfo: ExtensionInfo = {

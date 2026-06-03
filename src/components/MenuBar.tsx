@@ -84,6 +84,8 @@ const menuTemplate: { label: string; items: MenuItem[] }[] = [
       { label: 'Load Extension...', action: 'menu:load-extension' },
       { label: 'Install Extension...', action: 'menu:install-extension' },
       { separator: true },
+      { label: 'Snippet Extension Creator', action: 'menu:snippet-extension-creator' },
+      { separator: true },
       { label: 'Refresh Extensions', action: 'menu:refresh-extensions' }
     ]
   },

@@ -16,6 +16,8 @@ import CloneModal from './components/CloneModal'
 import GitHubModal from './components/GitHubModal'
 import GitStatusModal from './components/GitStatusModal'
 import AboutModal from './components/AboutModal'
+import SnippetManager from './components/SnippetManager'
+import { generateExtensionFiles, getExtensionId } from './core/ExtensionGenerator'
 import './styles/global.css'
 import { EditorTab, EditorSettings, CommandItem } from './types'
 import { ExtensionHost } from './core/ExtensionHost'
@@ -39,6 +41,7 @@ const BUILTIN_COMMANDS: CommandItem[] = [
   { id: 'menu:manage-extensions', label: 'Manage Extensions...', category: 'Extensions', type: 'command' },
   { id: 'menu:install-extension', label: 'Install Extension...', category: 'Extensions', type: 'command' },
   { id: 'menu:refresh-extensions', label: 'Refresh Extensions', category: 'Extensions', type: 'command' },
+  { id: 'menu:snippet-extension-creator', label: 'Snippet Extension Creator', category: 'Extensions', type: 'command' },
   { id: 'menu:source-control', label: 'View Source Control', category: 'Git', shortcut: 'Ctrl+Shift+G', type: 'command' },
   { id: 'menu:git-status', label: 'Git Status', category: 'Git', type: 'command' },
   { id: 'menu:git-commit', label: 'Git Commit...', category: 'Git', type: 'command' },
@@ -102,6 +105,7 @@ const App: React.FC = () => {
   const [extensionsLoaded, setExtensionsLoaded] = useState(0)
   const [extensionsList, setExtensionsList] = useState<ExtensionInfo[]>([])
   const [extensionsPanelVisible, setExtensionsPanelVisible] = useState(false)
+  const [snippetManagerVisible, setSnippetManagerVisible] = useState(false)
   const [consoleVisible, setConsoleVisible] = useState(false)
   const [consoleLogs, setConsoleLogs] = useState<Array<{ id: string; timestamp: string; level: 'log' | 'warn' | 'error' | 'info'; message: string }>>([])
   const [commandPaletteVisible, setCommandPaletteVisible] = useState(false)
@@ -980,10 +984,19 @@ const App: React.FC = () => {
           setExtensionsList(extensionHostRef.current.getAllExtensions())
         }
         break
+      case 'menu:snippet-extension-creator':
+        setSnippetManagerVisible(prev => !prev)
+        break
       case 'menu:refresh-extensions':
-        if (extensionHostRef.current) {
-          setExtensionsList(extensionHostRef.current.getAllExtensions())
-          setExtensionsLoaded(extensionHostRef.current.getAllExtensions().length)
+        if (extensionHostRef.current && window.electronAPI) {
+          const dataPath = await window.electronAPI.getDataPath()
+          const host = extensionHostRef.current
+          const count = await host.loadExtensionsFromDirectory(dataPath + '/extensions')
+          setExtensionsLoaded(count)
+          setExtensionsList(host.getAllExtensions())
+          await host.activateExtensionsByEvent('*')
+          setExtensionsList(host.getAllExtensions())
+          syncExtensionThemes()
         }
         break
       case 'menu:toggle-search':
@@ -1176,6 +1189,39 @@ const App: React.FC = () => {
         }
       }
     }
+  }, [])
+
+  const handleSaveSnippetExtension = useCallback(async (
+    extName: string,
+    extDescription: string,
+    extAuthor: string,
+    extVersion: string,
+    language: string,
+    snippets: any[]
+  ) => {
+    if (!window.electronAPI) throw new Error('electronAPI not available')
+    const files = generateExtensionFiles(extName, extDescription, extAuthor, extVersion, language, snippets)
+    const extId = getExtensionId(extName)
+    const dataPath = await window.electronAPI.getDataPath()
+    const extDir = dataPath + '/extensions/' + extId
+    const fs = window.electronAPI.fs
+    const exists = await fs.exists(extDir)
+    if (!exists) {
+      const folderAPI = window.electronAPI.folder
+      await folderAPI.create(extId, dataPath + '/extensions')
+    }
+    await fs.writeFile(extDir + '/extension.json', files['extension.json'])
+    await fs.writeFile(extDir + '/extension.js', files['extension.js'])
+    if (extensionHostRef.current) {
+      const host = extensionHostRef.current
+      const count = await host.loadExtensionsFromDirectory(dataPath + '/extensions')
+      setExtensionsLoaded(count)
+      setExtensionsList(host.getAllExtensions())
+      await host.activateExtensionsByEvent('*')
+      setExtensionsList(host.getAllExtensions())
+      syncExtensionThemes()
+    }
+    setSnippetManagerVisible(false)
   }, [])
 
   return React.createElement('div', {
@@ -1620,6 +1666,11 @@ const App: React.FC = () => {
         ])
       ])
     ]),
+    snippetManagerVisible && React.createElement(SnippetManager, {
+      key: 'snippet-manager',
+      onSave: handleSaveSnippetExtension,
+      onClose: () => setSnippetManagerVisible(false)
+    }),
     extensionsPanelVisible && React.createElement(ExtensionsPanel, {
       key: 'extensions-panel',
       extensions: extensionsList,
