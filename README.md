@@ -339,3 +339,6 @@ For full documentation on the extension system, API reference, theming, and debu
 ## License
 
 [GNU General Public License v3.0](LICENSE)
+
+---
+*Project created with [opencode](https://opencode.ai) agent **Big Pickle**.*
